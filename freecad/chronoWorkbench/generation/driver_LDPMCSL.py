@@ -1399,7 +1399,10 @@ if __name__ == '__main__':
 
 
     # Remove initial mesh and insert final mesh visualization
-    App.getDocument(App.ActiveDocument.Name).removeObject(meshName)
+    #App.getDocument(App.ActiveDocument.Name).removeObject(meshName)
+    doc = App.getDocument(App.ActiveDocument.Name)
+    if hasattr(doc, meshName):
+        doc.removeObject(meshName)
     meshFile = str(Path(outDir + outName + '/' + geoName + '-para-mesh.000.vtk'))
     Fem.insert(meshFile,App.ActiveDocument.Name)
 

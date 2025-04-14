@@ -40,13 +40,13 @@ def mkData_LDPMCSL_facetsVertices(geoName,tempPath,tetFacets):
     facetPoints = tetFacets.reshape(-1,3)
 
     # Remove any duplicate points and keep the original order
-    _, idx = np.unique(facetPoints, return_index=True, axis=0)
-    facetPoints = facetPoints[np.sort(idx)]
+    #_, idx = np.unique(facetPoints, return_index=True, axis=0)
+    #facetPoints = facetPoints[np.sort(idx)]
 
 
     # Write the data file
     np.savetxt(Path(tempPath + geoName + \
-        '-data-facetsVerticesNew.dat'), facetPoints, fmt='%.10g', delimiter=' ', comments=''\
+        '-data-facetsVertices.dat'), facetPoints, fmt='%.10g', delimiter=' ', comments=''\
         ,header='\
 // ================================================================================\n\
 // CHRONO WORKBENCH - github.com/Concrete-Chrono-Development/chrono-preprocessor\n\
