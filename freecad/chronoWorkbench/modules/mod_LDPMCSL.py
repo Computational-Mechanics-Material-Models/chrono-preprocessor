@@ -608,7 +608,7 @@ class inputWindow_LDPMCSL:
             grainAggMin, grainAggMax, grainAggFuller, grainAggSieveD, grainAggSieveP,\
             grainITZMin, grainITZMax, grainITZFuller, grainITZSieveD, grainITZSieveP,\
             grainBinderMin, grainBinderMax, grainBinderFuller, grainBinderSieveD, grainBinderSieveP,\
-            periodicToggle,\
+            periodicToggle,particleOffsetCoef,\
             outputDir, dataFilesGen, visFilesGen, singleTetGen, modelType] = read_LDPMCSL_inputs(self.form)
 
         if modelType in ["Confinement Shear Lattice (CSL) - LDPM Style ",\

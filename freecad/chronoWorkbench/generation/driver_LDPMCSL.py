@@ -134,7 +134,7 @@ def driver_LDPMCSL(self,fastGen,tempPath):
         grainAggMin, grainAggMax, grainAggFuller, grainAggSieveD, grainAggSieveP,\
         grainITZMin, grainITZMax, grainITZFuller, grainITZSieveD, grainITZSieveP,\
         grainBinderMin, grainBinderMax, grainBinderFuller, grainBinderSieveD, grainBinderSieveP,\
-        periodicToggle,\
+        periodicToggle,particleOffsetCoef,\
         outDir, dataFilesGen, visFilesGen, singleTetGen, modelType] = read_LDPMCSL_inputs(self.form)
 
     # Make output directory if does not exist
@@ -229,7 +229,6 @@ def driver_LDPMCSL(self,fastGen,tempPath):
     else:
         airFrac = airFrac1
     
-    parOffsetCoeff = 0.2                                    # Minimum distance between particles factor 
     verbose = "On"
 
     self.form[5].progressBar.setValue(1) 
@@ -335,7 +334,7 @@ def driver_LDPMCSL(self,fastGen,tempPath):
 
 
     # Basic Calcs
-    parOffset = parOffsetCoeff*minPar
+    parOffset = particleOffsetCoef*minPar
 
     
     # Store coordinates of meshTets in new format

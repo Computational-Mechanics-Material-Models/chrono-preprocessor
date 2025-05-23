@@ -185,6 +185,8 @@ def read_LDPMCSL_inputs(form):
 
     # Additional Parameters - Periodic Boundary Conditions
     periodicToggle      = form[4].periodicToggle.currentText()
+    particleOffsetCoef  = float(form[4].particleOffsetCoef.value() or 0.2)
+
 
     # Generation Data
     outputDir           = form[5].outputDir.text()
@@ -206,5 +208,5 @@ def read_LDPMCSL_inputs(form):
         grainAggMin, grainAggMax, grainAggFuller, grainAggSieveD, grainAggSieveP,\
         grainITZMin, grainITZMax, grainITZFuller, grainITZSieveD, grainITZSieveP,\
         grainBinderMin, grainBinderMax, grainBinderFuller, grainBinderSieveD, grainBinderSieveP,\
-        periodicToggle,\
+        periodicToggle,particleOffsetCoef,\
         outputDir, dataFilesGen, visFilesGen, singleTetGen, modelType

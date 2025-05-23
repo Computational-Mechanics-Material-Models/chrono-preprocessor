@@ -1863,13 +1863,16 @@
         </widget>
         <widget class="QWidget" name="page">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <layout class="QGridLayout" name="gridLayout_7">
           <item row="0" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_36">
             <item>
-             <widget class="QDoubleSpinBox" name="doubleSpinBox_24">
+             <widget class="QDoubleSpinBox" name="particleOffsetCoef">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -1891,10 +1894,16 @@
               <property name="singleStep">
                <double>0.010000000000000</double>
               </property>
+              <property name="value">
+               <double>0.200000000000000</double>
+              </property>
              </widget>
             </item>
             <item>
              <widget class="QLabel" name="label_14">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="text">
                <string>Particle Offset Coefficient</string>
               </property>
@@ -1902,7 +1911,7 @@
             </item>
            </layout>
           </item>
-          <item row="2" column="0">
+          <item row="1" column="0">
            <spacer name="spacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -1914,33 +1923,6 @@
              </size>
             </property>
            </spacer>
-          </item>
-          <item row="1" column="0">
-           <layout class="QHBoxLayout" name="horizontalLayout_39">
-            <item>
-             <widget class="QSpinBox" name="spinBox">
-              <property name="minimumSize">
-               <size>
-                <width>75</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>75</width>
-                <height>16777215</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_17">
-              <property name="text">
-               <string>Material Assignment Rule</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
           </item>
          </layout>
         </widget>
