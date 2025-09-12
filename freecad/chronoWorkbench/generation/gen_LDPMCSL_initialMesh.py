@@ -90,8 +90,17 @@ def gen_LDPMCSL_initialMesh(cadFile,analysisName, geoName, meshName, minPar):
         App.ActiveDocument.getObject(meshName).Algorithm3D = u"Delaunay"
         App.ActiveDocument.getObject(meshName).ElementDimension = u"3D"
         App.ActiveDocument.getObject(meshName).CoherenceMesh = True
-        # Assign the geometry object to the mesh object
-        App.ActiveDocument.ActiveObject.Part = App.getDocument(App.ActiveDocument.Name).getObjectsByLabel(geoName)[0]
+        # Assign the geometry object to the mesh object.  FreeCAD 0.20 used a
+        # `Part` property on the Gmsh mesher while 1.0 renamed it to `Shape`.
+        # Support both so the workbench runs on legacy and current releases.
+        gmsh_obj = App.ActiveDocument.ActiveObject
+        geo_obj = App.getDocument(App.ActiveDocument.Name).getObjectsByLabel(geoName)[0]
+        if hasattr(gmsh_obj, "Part"):
+            gmsh_obj.Part = geo_obj
+        elif hasattr(gmsh_obj, "Shape"):
+            gmsh_obj.Shape = geo_obj
+        else:
+            raise AttributeError("Gmsh mesh object missing 'Part'/'Shape' attribute")
         App.ActiveDocument.recompute()
         # Adjust relative links
         App.ActiveDocument.getObject(meshName).adjustRelativeLinks(App.ActiveDocument.getObject(analysisName))
