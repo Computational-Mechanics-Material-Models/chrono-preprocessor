@@ -46,7 +46,14 @@ import Fem
 import femmesh.femmesh2mesh
 
 
-from PySide import QtCore, QtGui
+try:  # FreeCAD 1.0 provides a PySide shim
+    from PySide import QtCore, QtGui, QtWidgets  # type: ignore
+except ImportError:  # FreeCAD 0.20 ships PySide2
+    try:
+        from PySide2 import QtCore, QtGui, QtWidgets  # type: ignore
+    except ImportError:  # Fall back for very old FreeCAD versions
+        from PySide import QtCore, QtGui  # type: ignore
+        QtWidgets = QtGui  # type: ignore
 
 # Importing: paths
 from freecad.chronoWorkbench                                              import ICONPATH
@@ -68,7 +75,7 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 #sys.executable = str(Path(App.ConfigGet('AppHomePath') + '/bin/python.exe'))
-multiprocessing.set_executable(str(Path(App.ConfigGet('AppHomePath') + '/bin/pythonw.exe')))
+multiprocessing.set_executable(sys.executable)
 
 
 
@@ -115,72 +122,55 @@ class inputWindow_SPHDEM:
     def getStandardButtons(self):
 
         # Only show a close button
-        # def accept() in no longer needed, since there is no OK button
-        return int(QtGui.QDialogButtonBox.Close)
+        # def accept() is no longer needed, since there is no OK button
+        return int(QtWidgets.QDialogButtonBox.Close)
 
     def openFilePara(self):
 
         path = App.ConfigGet("UserHomePath")
         filetype = "CC Parameter input format (*.cwPar)"
 
-        OpenName = ""
-        try:
-            OpenName = QtGui.QFileDialog.getOpenFileName(None,QString.fromLocal8Bit("Read a file parameter file"),path,             filetype)# type: ignore
-        #                                                                     "here the text displayed on windows" "here the filter (extension)"   
-        except Exception:
-            OpenName, Filter = QtGui.QFileDialog.getOpenFileName(None, "Read a file parameter file", path,             filetype) #PySide
-        #                                                                     "here the text displayed on windows" "here the filter (extension)"   
-        if OpenName == "":                                                            # if the name file are not selected then Abord process
-            App.Console.PrintMessage("Process aborted"+"\n")
+        OpenName, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None, "Read a file parameter file", path, filetype
+        )
+        if OpenName == "":  # if the name file is not selected then Abort process
+            App.Console.PrintMessage("Process aborted" + "\n")
         else:
             self.form[0].setupFile.setText(OpenName)
 
     def openFileGeo(self):
 
         path = App.ConfigGet("UserHomePath")
-        filetype = "Supported formats (*.brep *.brp *.iges *.igs *.step *.stp);;\
-                    BREP format       (*.brep *.brp);; \
-                    IGES format       (*.iges *.igs);; \
-                    STEP format       (*.step *.stp)"
+        filetype = (
+        "Supported formats (*.brep *.brp *.iges *.igs *.step *.stp);;"
+        "                    BREP format       (*.brep *.brp);; "
+        "                    IGES format       (*.iges *.igs);; "
+        "                    STEP format       (*.step *.stp)"
+    )
 
-        OpenName = ""
-        try:
-            OpenName = QtGui.QFileDialog.getOpenFileName(None,QString.fromLocal8Bit("Read a geometry file"),path,             filetype)# type: ignore
-        #                                                                     "here the text displayed on windows" "here the filter (extension)"   
-        except Exception:
-            OpenName, Filter = QtGui.QFileDialog.getOpenFileName(None, "Read a geometry file", path,             filetype) #PySide
-        #                                                                     "here the text displayed on windows" "here the filter (extension)"   
-        if OpenName == "":                                                            # if the name file are not selected then Abord process
-            App.Console.PrintMessage("Process aborted"+"\n")
+        OpenName, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None, "Read a geometry file", path, filetype
+        )
+        if OpenName == "":  # if the name file is not selected then Abort process
+            App.Console.PrintMessage("Process aborted" + "\n")
         else:
             self.form[1].cadName.setText("Import geometry listed below")
             self.form[1].cadFile.setText(OpenName)
-
-
-
 
     def openDir(self):
 
         path = App.ConfigGet('UserHomePath')
 
-        OpenName = ""
-        try:
-            OpenName = QtGui.QFileDialog.getExistingDirectory(None, "Open Directory",path,QtGui.QFileDialog.Option.ShowDirsOnly) 
-         
-        except Exception:
-            OpenName, Filter = QtGui.QFileDialog.getExistingDirectory(None, "Open Directory",path,QtGui.QFileDialog.Option.ShowDirsOnly) 
+        OpenName = QtWidgets.QFileDialog.getExistingDirectory(
+            None, 'Open Directory', path, QtWidgets.QFileDialog.ShowDirsOnly
+        )
 
-        
-
-        if OpenName == "":                                                            # if not selected then Abort process
-            App.Console.PrintMessage("Process aborted"+"\n")
+        if OpenName == '':  # if not selected then Abort process
+            App.Console.PrintMessage('Process aborted' + '\n')
         else:
             self.form[5].outputDir.setText(OpenName)
 
         return OpenName
-
-
-
 
     def generationDriver(self):
 

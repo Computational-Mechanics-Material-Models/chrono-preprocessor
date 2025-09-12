@@ -45,7 +45,14 @@ import Fem
 import femmesh.femmesh2mesh
 import Spreadsheet
 
-from PySide import QtCore, QtGui
+try:  # FreeCAD 1.0 provides a PySide shim
+    from PySide import QtCore, QtGui, QtWidgets  # type: ignore
+except ImportError:  # FreeCAD 0.20 ships PySide2
+    try:
+        from PySide2 import QtCore, QtGui, QtWidgets  # type: ignore
+    except ImportError:  # Fall back for very old FreeCAD versions
+        from PySide import QtCore, QtGui  # type: ignore
+        QtWidgets = QtGui  # type: ignore
 
 from freecad.chronoWorkbench                                     import ICONPATH
 from freecad.chronoWorkbench                                     import GUIPATH
@@ -247,7 +254,7 @@ class genWindow_LDPMCSL:
 
         # Only show a close button
         # def accept() in no longer needed, since there is no OK button
-        return int(QtGui.QDialogButtonBox.Close)
+        return int(QtWidgets.QDialogButtonBox.Close)
 
 
 
@@ -255,26 +262,16 @@ class genWindow_LDPMCSL:
 
         path = App.ConfigGet('UserHomePath')
 
-        OpenName = ""
-        try:
-            OpenName = QtGui.QFileDialog.getExistingDirectory(None, "Open Directory",path,QtGui.QFileDialog.Option.ShowDirsOnly) 
-         
-        except Exception:
-            OpenName, Filter = QtGui.QFileDialog.getExistingDirectory(None, "Open Directory",path,QtGui.QFileDialog.Option.ShowDirsOnly) 
+        OpenName = QtWidgets.QFileDialog.getExistingDirectory(
+            None, 'Open Directory', path, QtWidgets.QFileDialog.ShowDirsOnly
+        )
 
-        
-
-        if OpenName == "":                                                            # if not selected then Abort process
-            App.Console.PrintMessage("Process aborted"+"\n")
+        if OpenName == '':  # if not selected then Abort process
+            App.Console.PrintMessage('Process aborted' + '\n')
         else:
             self.form[5].outputDir.setText(OpenName)
 
         return OpenName
-
-
-
-
-
 
     def chronoGeneration(self):
 

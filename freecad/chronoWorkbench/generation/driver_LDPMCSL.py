@@ -48,7 +48,15 @@ import ObjectsFem
 import FemGui
 import Fem
 import femmesh.femmesh2mesh
-from PySide import QtCore, QtGui
+
+try:  # FreeCAD 1.0 provides a PySide shim
+    from PySide import QtCore, QtGui, QtWidgets  # type: ignore
+except ImportError:  # FreeCAD 0.20 ships PySide2
+    try:
+        from PySide2 import QtCore, QtGui, QtWidgets  # type: ignore
+    except ImportError:  # Fall back for very old FreeCAD versions
+        from PySide import QtCore, QtGui  # type: ignore
+        QtWidgets = QtGui  # type: ignore
 
 
 # Importing: generation
@@ -1526,7 +1534,7 @@ if __name__ == '__main__':
 
     # Switch back to model window
     mw=Gui.getMainWindow()
-    mdi=mw.findChild(QtGui.QMdiArea)
+    mdi=mw.findChild(QtWidgets.QMdiArea)
     mdi.activatePreviousSubWindow()
 
     # Switch to FEM GUI
