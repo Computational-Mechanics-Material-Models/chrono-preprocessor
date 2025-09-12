@@ -22,7 +22,15 @@
 import os
 import FreeCADGui as Gui #type: ignore
 import FreeCAD as App #type: ignore
-from PySide import QtGui #type: ignore
+
+try:  # FreeCAD 1.0 provides a PySide shim
+    from PySide import QtGui, QtWidgets  # type: ignore
+except ImportError:  # FreeCAD 0.20 ships PySide2
+    try:
+        from PySide2 import QtGui, QtWidgets  # type: ignore
+    except ImportError:  # Fall back for very old FreeCAD versions
+        from PySide import QtGui  # type: ignore
+        QtWidgets = QtGui  # type: ignore
 from FreeCADGui import Workbench #type: ignore
 
 # Paths to Import
