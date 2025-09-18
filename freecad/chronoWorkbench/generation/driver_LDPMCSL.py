@@ -1431,6 +1431,8 @@ if __name__ == '__main__':
     if geoType == "Import CAD or Mesh":
         filename = os.path.basename(cadFile)
         filename, file_extension = os.path.splitext(filename)
+        GeoObject = App.getDocument(App.ActiveDocument.Name).getObjectsByLabel(filename)[0]
+        GeoObject.Label = elementType + "geo" + str(0).zfill(3)
         filename = re.sub("\.", "_", filename)
         filename = re.sub("/.", "_", filename)
         filename = re.sub("-", "_", filename)
@@ -1445,9 +1447,6 @@ if __name__ == '__main__':
         Gui.getDocument(App.ActiveDocument.Name).getObject(filename).ShapeColor = (0.80,0.80,0.80)
         App.getDocument(App.ActiveDocument.Name).getObject(analysisName).addObject(App.getDocument(App.ActiveDocument.Name).getObject(filename))
         App.getDocument(App.ActiveDocument.Name).getObject(filename).Label = meshName
-        GeoObject = App.getDocument(App.ActiveDocument.Name).getObjectsByLabel(filename)[0]
-        GeoObject.Label = elementType + "geo" + str(0).zfill(3)
-     
     else:
         Gui.getDocument(App.ActiveDocument.Name).getObject(filename).DisplayMode = u"Nodes"
         Gui.getDocument(App.ActiveDocument.Name).getObject(filename).PointSize = 3.00
