@@ -23,12 +23,14 @@
 
 # Importing: standard
 import os
+import sys
 import re
 import shutil
 import time
 import tempfile
 import numpy as np
 from pathlib import Path
+import subprocess
 import multiprocessing
 import functools
 import math
@@ -393,6 +395,129 @@ def driver_LDPMCSL(self,fastGen,tempPath):
 #
 # ================================================================================
 
+import os
+import sys
+import glob
+
+def find_freecad():
+    '''Find and import FreeCAD from various installation methods'''
+    
+    # Standard FreeCAD Flatpak paths
+    flatpak_paths = [
+        # User flatpak installation
+        os.path.expanduser('~/.local/share/flatpak/app/org.freecad.FreeCAD/current/active/files/lib'),
+        os.path.expanduser('~/.local/share/flatpak/app/org.freecad.FreeCAD/current/active/files/lib/python*/site-packages'),
+        os.path.expanduser('~/.local/share/flatpak/app/org.freecad.FreeCAD/current/active/files/usr/lib/python*/site-packages'),
+        # System flatpak installation  
+        '/var/lib/flatpak/app/org.freecad.FreeCAD/current/active/files/lib',
+        '/var/lib/flatpak/app/org.freecad.FreeCAD/current/active/files/bin',
+        '/var/lib/flatpak/app/org.freecad.FreeCAD/current/active/files/freecad/lib',
+        '/var/lib/flatpak/app/org.freecad.FreeCAD/current/active/files/freecad/bin',
+        '/var/lib/flatpak/app/org.freecad.FreeCAD/current/active/files/lib/python*/site-packages',
+        '/var/lib/flatpak/app/org.freecad.FreeCAD/current/active/files/usr/lib/python*/site-packages',
+        # Alternative flatpak paths with wildcards for versions
+        '/var/lib/flatpak/app/org.freecad.FreeCAD/*/active/files/lib',
+        '/var/lib/flatpak/app/org.freecad.FreeCAD/*/active/files/lib/python*/site-packages',
+        '/var/lib/flatpak/app/org.freecad.FreeCAD/*/active/files/usr/lib/python*/site-packages',
+    ]
+    
+    # Snap paths
+    snap_paths = [
+        '/snap/freecad/current/lib',
+        '/snap/freecad/current/usr/lib',
+        '/snap/freecad/*/lib',
+        '/snap/freecad/*/usr/lib',
+    ]
+    
+    # Traditional installation paths
+    traditional_paths = [
+        '/usr/lib/freecad/lib',
+        '/usr/lib/freecad-python3/lib', 
+        '/usr/share/freecad/lib',
+        '/opt/freecad/lib',
+        '/Applications/FreeCAD.app/Contents/lib',  # macOS
+    ]
+    
+    all_paths = flatpak_paths + snap_paths + traditional_paths
+    
+    # Expand wildcards and check each path
+    for path_pattern in all_paths:
+        # Handle wildcard patterns
+        if '*' in path_pattern:
+            matching_paths = glob.glob(path_pattern)
+        else:
+            matching_paths = [path_pattern]
+            
+        for path in matching_paths:
+            print(path, os.path.exists(path))
+            if os.path.exists(path):
+                print('XXX', path)
+                print(f"Checking path: {path}")
+                sys.path.insert(0, path)
+                try:
+                    import FreeCAD
+                    print(f"FreeCAD found at: {path}")
+                    return True
+                except ImportError:
+                    continue
+    
+    return False
+
+def check_installation_type():
+    '''Detect how FreeCAD is installed'''
+    if 'SNAP' in os.environ or 'SNAP_NAME' in os.environ:
+        return "snap"
+    elif 'FLATPAK_ID' in os.environ:
+        return "flatpak"
+    elif os.path.exists('/var/lib/flatpak/app/org.freecad.FreeCAD'):
+        return "flatpak"
+    elif os.path.exists('/snap/freecad'):
+        return "snap"
+    else:
+        return "traditional"
+
+def get_freecad_executable():
+    '''Get the correct FreeCAD executable based on installation type'''
+    install_type = check_installation_type()
+    
+    if install_type == "flatpak":
+        return "flatpak run org.freecad.FreeCAD"
+    elif install_type == "snap":
+        return "freecad"
+    else:
+        return "freecad"
+
+# Main import logic
+try:
+    import FreeCAD as App
+    print("FreeCAD imported successfully")
+except ImportError:
+    install_type = check_installation_type()
+    print(f"Detected installation type: {install_type}")
+    
+    if find_freecad():
+        import FreeCAD as App
+        print("FreeCAD found and imported")
+    else:
+        print("Error: FreeCAD not found!")
+        executable = get_freecad_executable()
+        
+        if install_type == "flatpak":
+            print('Check if you have rights to access "/var/lib/flatpak/app/org.freecad.FreeCAD/current/active/files/freecad/lib"')
+            print("For Flatpak FreeCAD, run your script using:")
+            print(f"  {executable} --console --run-python tempGen.py")
+            print("Or run interactively:")
+            print(f"  {executable} --console")
+        elif install_type == "snap":
+            print("For Snap FreeCAD, run your script using:")
+            print(f"  freecad --console --run-python tempGen.py")
+        else:
+            print("Try running from FreeCAD Python console or:")
+            print("  freecad --console --run-python tempGen.py")
+        
+        sys.exit(1)
+
+# Now import your module
 from gen_LDPMCSL_multiStep   import gen_LDPMCSL_multiStep                     
                     
             \n\n""")
@@ -518,7 +643,13 @@ if __name__ == '__main__':
         
         
         # Run the generation   
-        os.system("python " + str(Path(currentDir + "/tempGen.py")))
+        #os.system("python " + str(Path(currentDir + "/tempGen.py")))
+
+        result = subprocess.run(["python", str(Path(currentDir + "/tempGen.py"))], 
+                            capture_output=False, text=True, cwd=currentDir)
+        print("STDOUT:", result.stdout)
+        print("STDERR:", result.stderr)
+
 
         # Read the temporary internalNodes file
         internalNodes = np.load(tempPath + "internalNodes.npy")
