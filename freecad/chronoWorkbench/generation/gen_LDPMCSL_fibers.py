@@ -17,6 +17,8 @@
 ## This file contains the function to generate a fiber and outputs the
 ## location of the fiber as well other fiber properties. 
 ##
+## ===========================================================================
+
 
 import numpy as np
 
@@ -197,12 +199,16 @@ def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
 
                 # Find distance to nearest surface triangle
                 distances = np.linalg.norm(averageTriangles-p2Fiber,axis=1)
-                nearest = np.where(distances == np.amin(distances))
+                # nearest = np.where(distances == np.amin(distances))
+                nearest = np.argmin(distances)
 
                 # Store the plane of this triangle
-                p0 = coords0[nearest,:]
-                p1 = coords1[nearest,:]
-                p2 = coords2[nearest,:]
+                p0 = coords0[nearest]
+                p1 = coords1[nearest]
+                p2 = coords2[nearest]
+                # p0 = coords0[nearest,:]
+                # p1 = coords1[nearest,:]
+                # p2 = coords2[nearest,:]
 
                 p01 = p1-p0
                 p02 = p2-p0
@@ -210,7 +216,8 @@ def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
                 fiberVector = p2Fiber-p1Fiber
 
                 # Compute distance to cutting plane
-                t = (np.dot(np.squeeze(np.cross(p01,p02)),np.squeeze((p1Fiber-p0))))/(np.dot(np.squeeze(-fiberVector),np.squeeze(np.cross(p01,p02))))
+                t = np.dot(np.cross(p01, p02), (p1Fiber - p0)) / np.dot(-fiberVector, np.cross(p01, p02))
+                # t = (np.dot(np.squeeze(np.cross(p01,p02)),np.squeeze((p1Fiber-p0))))/(np.dot(np.squeeze(-fiberVector),np.squeeze(np.cross(p01,p02))))
 
                 # New point 2 for fiber after cutting
                 p2Fiber = p1Fiber+fiberVector*t
