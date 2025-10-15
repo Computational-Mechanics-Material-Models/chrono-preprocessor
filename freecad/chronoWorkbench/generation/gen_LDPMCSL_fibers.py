@@ -17,11 +17,8 @@
 ## This file contains the function to generate a fiber and outputs the
 ## location of the fiber as well other fiber properties. 
 ##
-## ===========================================================================
 
 import numpy as np
-
-
 
 def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
     lFiber,maxC,maxAggD,fiberOrientation,orientationStrength,triangles,\
@@ -60,7 +57,18 @@ def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
     randomN1 = np.random.rand(maxIter*3)
     randomN2 = np.random.rand(maxIter*3)
     iterReq=0
-
+    
+    # Compute tet bounding boxes
+    tets_min = np.min(vertices[tets - 1], axis=1)
+    tets_max = np.max(vertices[tets - 1], axis=1)
+    
+    tets_min_global = np.min(vertices[tets - 1], axis=(0, 1))
+    tets_max_global = np.max(vertices[tets - 1], axis=(0, 1))
+    
+    # print("tet min ",tets_min_global)
+    # print("tet max ",tets_max_global)
+    
+    
     # Generate random nodal location
     while True:
 
@@ -72,16 +80,32 @@ def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
             exit()
 
         # Random point selection in random tet prism container
-        tetIndex = int(np.around(randomN1[iterReq] * len(tets))) - 1
+        # tetIndex = int(np.around(randomN1[iterReq] * len(tets))) - 1
+        tetIndex = int(randomN1[iterReq] * len(tets))
+        if tetIndex == len(tets):
+            tetIndex -= 1
+        
         tetVerts = vertices[tets[tetIndex]-1]
+        
+        # Random barycentric coordinates (x1 to x4)
+        weight = np.sort(np.random.rand(3))
+        x1 = weight[0]
+        x2 = weight[1] - weight[0]
+        x3 = weight[2] - weight[1]
+        x4 = 1.0 - weight[2]
 
-        tetMin = np.amin(tetVerts, axis=0)
-        tetMax = np.amax(tetVerts, axis=0)
+        # Generate a random point inside the tetrahedron
+        p1Fiber = x1 * tetVerts[0] + x2 * tetVerts[1] + x3 * tetVerts[2] + x4 * tetVerts[3]
 
-        p1Fiber = np.array([randomN1[iterReq]*(tetMax[0]-tetMin[0])+tetMin[0],\
-            randomN1[iterReq+1]*(tetMax[1]-tetMin[1])+tetMin[1],randomN1[iterReq+2]\
-            *(tetMax[2]-tetMin[2])+tetMin[2]]).T        
-
+        if np.any(p1Fiber < tets_min_global) or np.any(p1Fiber > tets_max_global):
+            print("p1fiber outside the box", p1Fiber)
+            print("tetVerts", tetVerts)
+            
+        # tetMin = np.amin(tetVerts, axis=0)
+        # tetMax = np.amax(tetVerts, axis=0)
+        
+           
+        # Generate fiber orientaion
         if fiberOrientation == []:
 
             # Option for Totally Random Orientation (Get spherical -> Cartesian -> Normalize)
@@ -131,20 +155,28 @@ def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
             # Include opposite direction
             orienFiber = sign*orienFiber
 
-
+                
+        
+  
         p2Fiber = p1Fiber+orienFiber*lFiber
+        
+        # p1Fiber = pCFiber - 0.5 * lFiber * orienFiber
+        # p2Fiber = pCFiber + 0.5 * lFiber * orienFiber
 
         # Obtain extents for floating bin
-        binMin = np.amin(np.vstack((p1Fiber,p2Fiber)), axis=0)-maxAggD-lFiber
-        binMax = np.amax(np.vstack((p1Fiber,p2Fiber)), axis=0)+maxAggD+lFiber
+        # binMin = np.amin(np.vstack((p1Fiber,p2Fiber)), axis=0)-maxAggD-lFiber
+        # binMax = np.amax(np.vstack((p1Fiber,p2Fiber)), axis=0)+maxAggD+lFiber
 
         # Check if fiber is inside the mesh    
         inside = False     
-        inside = insideCheckFiber(vertices,tets,p1Fiber,p2Fiber,\
-            binMin,binMax,coord1,coord2,coord3,coord4,maxC)
+        # inside = insideCheckFiber(vertices,tets,p1Fiber,p2Fiber,\
+        #     binMin,binMax,coord1,coord2,coord3,coord4,maxC)
+        inside = point_in_any_tet(p2Fiber, vertices, tets, tets_min, tets_max)
 
         # Indicate placed fiber and break While Loop
         if inside == True:
+            if np.any(p2Fiber < tets_min_global) or np.any(p2Fiber > tets_max_global):
+                print("p2fiber outside the box ", p2Fiber)
             return p1Fiber, p2Fiber, orienFiber, lFiber
         
         # Find point fiber intersects external surface and trim accordingly
@@ -161,7 +193,7 @@ def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
                 coords2 = vertices[triangles[:,2]-1] 
 
                 averageTriangles = (coords0+coords1+coords2)/3
-                averageFiber = (p1Fiber+p2Fiber)/2
+                # averageFiber = (p1Fiber+p2Fiber)/2
 
                 # Find distance to nearest surface triangle
                 distances = np.linalg.norm(averageTriangles-p2Fiber,axis=1)
@@ -182,21 +214,17 @@ def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
 
                 # New point 2 for fiber after cutting
                 p2Fiber = p1Fiber+fiberVector*t
-
-                # Obtain extents for floating bin
-                binMin = np.amin(np.vstack((p1Fiber,p2Fiber)), axis=0)-maxAggD-np.linalg.norm(p1Fiber-p2Fiber)
-                binMax = np.amax(np.vstack((p1Fiber,p2Fiber)), axis=0)+maxAggD+np.linalg.norm(p1Fiber-p2Fiber)
-
+                
+               
                 # Verfiy cut fiber is inside the mesh      
                 inside = False   
-                inside = insideCheckFiber(vertices,tets,p1Fiber,p1Fiber+0.99999*fiberVector*t,\
-                    binMin,binMax,coord1,coord2,coord3,coord4,maxC)
+                inside = point_in_any_tet(p2Fiber, vertices, tets, tets_min, tets_max)
 
                 if np.logical_and(inside == True,np.linalg.norm(p1Fiber-p2Fiber)<lFiber):
 
                     fiberLength = np.linalg.norm(p1Fiber-p2Fiber)
                     
-                    return p1Fiber, p2Fiber, orienFiber, lFiber
+                    return p1Fiber, p2Fiber, orienFiber, fiberLength
 
 
             # If not trimming then discard fiber and try again
@@ -204,75 +232,26 @@ def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
 
                 pass
 
-# Checks whether second fiber node falls within a tet (thus inside). 
-def insideCheckFiber(vertices,tets,p1Fiber,p2Fiber,binMin,binMax,\
-    coord1,coord2,coord3,coord4,maxC):
 
-    # Store tet vertices that fall inside the bin
-    coord1 = np.all([(coord1[:,0] > binMin[0]) , (coord1[:,0] < binMax[0]),\
-        (coord1[:,1] > binMin[1]) , (coord1[:,1] < binMax[1]) ,\
-        (coord1[:,2] > binMin[2]) , (coord1[:,2] < binMax[2])],axis=0)      
-    coord2 = np.all([(coord2[:,0] > binMin[0]) , (coord2[:,0] < binMax[0]),\
-        (coord2[:,1] > binMin[1]) , (coord2[:,1] < binMax[1]) ,\
-        (coord2[:,2] > binMin[2]) , (coord2[:,2] < binMax[2])],axis=0)          
-    coord3 = np.all([(coord3[:,0] > binMin[0]) , (coord3[:,0] < binMax[0]),\
-        (coord3[:,1] > binMin[1]) , (coord3[:,1] < binMax[1]) ,\
-        (coord3[:,2] > binMin[2]) , (coord3[:,2] < binMax[2])],axis=0)  
-    coord4 = np.all([(coord4[:,0] > binMin[0]) , (coord4[:,0] < binMax[0]),\
-        (coord4[:,1] > binMin[1]) , (coord4[:,1] < binMax[1]) ,\
-        (coord4[:,2] > binMin[2]) , (coord4[:,2] < binMax[2])],axis=0)  
+def point_in_tet(p, A, B, C, D):
+    v0, v1, v2 = B - A, C - A, D - A
+    vp = p - A
+    mat = np.column_stack((v0, v1, v2))
+    try:
+        bary = np.linalg.solve(mat, vp)
+    except np.linalg.LinAlgError:
+        return False
+    u, v, w = bary
+    return (u >= 0) and (v >= 0) and (w >= 0) and (u + v + w <= 1)
 
-    binTets = np.any([coord1,coord2,coord3,coord4],axis=0)
-
-    coord1 = vertices[tets.astype(int)[binTets,0]-1]
-    coord2 = vertices[tets.astype(int)[binTets,1]-1]
-    coord3 = vertices[tets.astype(int)[binTets,2]-1]
-    coord4 = vertices[tets.astype(int)[binTets,3]-1]
-
-    emptyOnes = np.ones(len(coord1[:,0]))
-
-    D00 = np.rot90(np.dstack((coord1[:,0],coord1[:,1],coord1[:,2],\
-        emptyOnes)), 3)
-    D01 = np.rot90(np.dstack((coord2[:,0],coord2[:,1],coord2[:,2],\
-        emptyOnes)), 3)
-    D02 = np.rot90(np.dstack((coord3[:,0],coord3[:,1],coord3[:,2],\
-        emptyOnes)), 3)
-    D03 = np.rot90(np.dstack((coord4[:,0],coord4[:,1],coord4[:,2],\
-        emptyOnes)), 3)
-
-    D0 = np.linalg.det(np.hstack((D00,D01,D02,D03)))
-
-    D10 = np.rot90(np.dstack((emptyOnes*p1Fiber[0],\
-        emptyOnes*p1Fiber[1],emptyOnes*p1Fiber[2],emptyOnes)), 3)
-    
-    D1 = np.linalg.det(np.hstack((D10,D01,D02,D03)))
-    D2 = np.linalg.det(np.hstack((D00,D10,D02,D03)))
-    D3 = np.linalg.det(np.hstack((D00,D01,D10,D03)))
-    D4 = np.linalg.det(np.hstack((D00,D01,D02,D10)))
-
-    p1 = False
-
-    if np.logical_and(np.logical_and(np.sign(D0) == np.sign(D1),\
-        np.sign(D0) == np.sign(D2)),\
-        np.logical_and(np.sign(D0) == np.sign(D3),\
-        np.sign(D0) == np.sign(D4))).any():
-        p1 = True
-
-    D10 = np.rot90(np.dstack((emptyOnes*p2Fiber[0],\
-        emptyOnes*p2Fiber[1],emptyOnes*p2Fiber[2],emptyOnes)), 3)
-    
-    D1 = np.linalg.det(np.hstack((D10,D01,D02,D03)))
-    D2 = np.linalg.det(np.hstack((D00,D10,D02,D03)))
-    D3 = np.linalg.det(np.hstack((D00,D01,D10,D03)))
-    D4 = np.linalg.det(np.hstack((D00,D01,D02,D10)))
-
-    p2 = False
-
-    if np.logical_and(np.logical_and(np.sign(D0) == np.sign(D1),\
-        np.sign(D0) == np.sign(D2)),\
-        np.logical_and(np.sign(D0) == np.sign(D3),\
-        np.sign(D0) == np.sign(D4))).any():
-        p2 = True
-
-    if np.logical_and(p1 == True,p2==True):
-        return True
+def point_in_any_tet(p, vertices, tets, tets_min, tets_max):
+    mask = np.all((tets_min <= p) & (tets_max >= p), axis=1)
+    idx = np.where(mask)[0]
+    for i in idx:
+        A = vertices[tets[i][0] - 1]
+        B = vertices[tets[i][1] - 1]
+        C = vertices[tets[i][2] - 1]
+        D = vertices[tets[i][3] - 1]
+        if point_in_tet(p, A, B, C, D):
+            return True
+    return False
