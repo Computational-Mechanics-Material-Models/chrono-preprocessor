@@ -34,6 +34,8 @@ def mkData_LDPMCSL_faceFacets(geoName,tempPath,surfaceNodes,surfaceFaces):
     --------------------------------------------------------------------------
     ### Outputs ###
     - A data file of all face facets in the model
+    - A data file of all surface nodes in the model (used for surface construction in fluid-solid transition)
+    - A data file of all surface faces in the model (used for surface construction in fluid-solid transition)
     --------------------------------------------------------------------------
     """
     
@@ -84,4 +86,12 @@ def mkData_LDPMCSL_faceFacets(geoName,tempPath,surfaceNodes,surfaceFaces):
 
     np.savetxt(Path(tempPath + geoName + \
         '-data-faceFacets.dat'), faceFacets, fmt='%.10g', comments = '', delimiter=' '\
+        ,header=headerText)
+    
+    np.savetxt(Path(tempPath + geoName + \
+        '-data-surfaceNodes.dat'), surfaceNodes, fmt='%.10g', comments = '', delimiter=' '\
+        ,header=headerText)
+        
+    np.savetxt(Path(tempPath + geoName + \
+        '-data-surfaceFaces.dat'), surfaceFaces, fmt='%.10g', comments = '', delimiter=' '\
         ,header=headerText)

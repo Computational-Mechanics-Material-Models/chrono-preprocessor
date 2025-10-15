@@ -31,18 +31,36 @@ def mkVtk_LDPMCSL_fibers(p1Fiber,p2Fiber,dFiber,lFiber,orienFibers,geoName,tempP
 
     # Generate VTK file for visualizing particles
     with open(Path(tempPath + geoName + \
-        '-para-fibers.000.vtk'),"w") as f:                                       
+        '-para-fibers000.vtk'),"w") as f:                                       
         f.write('# vtk DataFile Version 2.0\n')
         f.write('Unstructured grid legacy vtk file with point vector data\n')            
         f.write('ASCII\n')    
         f.write('\n')  
         f.write('DATASET UNSTRUCTURED_GRID\n')        
         f.write('POINTS ' + str(len(fiberCenter)) + ' double \n')  
-        f.write("\n".join(" ".join(map(str, x)) for x in p1Fiber))
+        f.write("\n".join(" ".join(map(str, x)) for x in fiberCenter))
         f.write('\n\n')  
         f.write('POINT_DATA ' + str(len(fiberCenter)) + '\n')
         f.write('VECTORS Size float\n')
         f.write("\n".join(" ".join(map(str, x)) for x in fiberVector))
         f.write('\n\n')  
         f.write('VECTORS Orientation float\n')
-        f.write("\n".join(" ".join(map(str, x)) for x in orienFibers))    
+        f.write("\n".join(" ".join(map(str, x)) for x in orienFibers))
+    
+    # Generate VTK file for visualizing particles
+    with open(Path(tempPath + geoName + \
+        '-para-fibers-poly000.vtk'),"w") as f:                                       
+        f.write('# vtk DataFile Version 2.0\n')
+        f.write('POLYDATA legacy vtk file with point vector data\n')            
+        f.write('ASCII\n')    
+        f.write('\n')  
+        f.write('DATASET POLYDATA\n')        
+        f.write('POINTS ' + str(len(fiberCenter)*2) + ' double \n')  
+        f.write("\n".join(" ".join(map(str, x)) for x in p1Fiber))
+        f.write('\n')
+        f.write("\n".join(" ".join(map(str, x)) for x in p2Fiber))
+        f.write('\n\n')  
+        f.write('LINES ' + str(len(fiberCenter)) +" "+ str(len(fiberCenter)*3) + '\n') 
+        for i in range(len(fiberCenter)):
+            f.write(f"2 {i} {i + len(fiberCenter)}\n")        
+        f.write('\n')
