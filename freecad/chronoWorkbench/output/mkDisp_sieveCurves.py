@@ -111,7 +111,7 @@ def mkDisp_sieveCurves(volFracPar,parVolTotal, tetVolume,minPar_sim, maxPar_sim,
     # Plotting
     Plot.plot(diametersTheory, passingPercentTheory, 'Theoretical Curve') 
     # Plot.plot(diameters[passingPercent_exp>min(passingPercent_exp)], passingPercent_exp[passingPercent_exp>min(passingPercent_exp)], 'Experiment Data') 
-    Plot.plot(diameters[passingPercent>min(passingPercent)], passingPercent[passingPercent>min(passingPercent)], 'Simulated Data (Shifted Up)') 
+    Plot.plot(diameters[passingPercent>min(passingPercent)], passingPercent[passingPercent>min(passingPercent)], 'Simulated Data') 
     # Plotting Formatting
     Plot.xlabel('Particle Diameter, $d$ (mm)') 
     Plot.ylabel('Percent Passing, $P$ (%)')
