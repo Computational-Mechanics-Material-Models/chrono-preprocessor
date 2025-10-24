@@ -32,7 +32,7 @@ def mkParameters(self,elementSet,tempPath):
         [setupFile, constitutiveEQ, matParaSet, \
             numCPU, numIncrements,maxIter,placementAlg,\
             geoType, dimensions, cadFile,\
-            minPar, maxPar, fullerCoef, sieveCurveDiameter, sieveCurvePassing,\
+            minPar_sim, maxPar_sim, minPar_exp, maxPar_exp, fullerCoef, sieveCurveDiameter, sieveCurvePassing,\
             wcRatio, densityWater, cementC, flyashC, silicaC, scmC,\
             cementDensity, flyashDensity, silicaDensity, scmDensity, airFrac1, \
             fillerC, fillerDensity, airFrac2,\
@@ -98,8 +98,10 @@ def mkParameters(self,elementSet,tempPath):
             f.write("geoType = " + geoType + "\n")
             f.write("dimensions = " + str(dimensions) + "\n")
             f.write("cadFile = " + cadFile + "\n")
-            f.write("minPar = " + str(minPar) + "\n")
-            f.write("maxPar = " + str(maxPar) + "\n")
+            f.write("minPar_sim = " + str(minPar_sim) + "\n")
+            f.write("maxPar_sim = " + str(maxPar_sim) + "\n")
+            f.write("minPar_exp = " + str(minPar_exp) + "\n")
+            f.write("maxPar_exp = " + str(maxPar_exp) + "\n")
             f.write("fullerCoef = " + str(fullerCoef) + "\n")
             f.write("sieveCurveDiameter = " + str(sieveCurveDiameter) + "\n")
             f.write("sieveCurvePassing = " + str(sieveCurvePassing) + "\n")

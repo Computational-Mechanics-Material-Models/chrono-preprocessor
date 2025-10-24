@@ -111,13 +111,16 @@ def read_LDPMCSL_inputs(form):
     cadFile             = form[1].cadFile.toPlainText()
 
     # Particle Settings
-    minPar              = float(form[2].minPar.value() or 0)
-    maxPar              = float(form[2].maxPar.value() or 0)      
-    fullerCoef          = float(form[2].fullerCoef.value() or 0)  
-    sieveCurveDiameter  = form[2].sieveDiameters.text()        
-    sieveCurvePassing   = form[2].sievePassing.text()   
+    minPar_sim          = float(form[2].minPar_sim.value() or 0)
+    maxPar_sim          = float(form[2].maxPar_sim.value() or 0)        
+      
 
     # Mix Design
+    minPar_exp          = float(form[3].minPar_exp.value() or 0)
+    maxPar_exp          = float(form[3].maxPar_exp.value() or 0)
+    fullerCoef          = float(form[3].fullerCoef.value() or 0)  
+    sieveCurveDiameter  = form[3].sieveDiameters.text()        
+    sieveCurvePassing   = form[3].sievePassing.text() 
     wcRatio             = float(form[3].wcRatio.value() or 0)
     densityWater        = float(form[3].waterDensity.text() or 0)
     cementC             = float(form[3].cementContent.text() or 0)
@@ -198,7 +201,7 @@ def read_LDPMCSL_inputs(form):
     return setupFile, constitutiveEQ, matParaSet, \
         numCPU, numIncrements,maxIter,placementAlg,\
         geoType, dimensions, cadFile,\
-        minPar, maxPar, fullerCoef, sieveCurveDiameter, sieveCurvePassing,\
+        minPar_sim, maxPar_sim, minPar_exp, maxPar_exp, fullerCoef, sieveCurveDiameter, sieveCurvePassing,\
         wcRatio, densityWater, cementC, flyashC, silicaC, scmC,\
         cementDensity, flyashDensity, silicaDensity, scmDensity, airFrac1, \
         fillerC, fillerDensity, airFrac2,\

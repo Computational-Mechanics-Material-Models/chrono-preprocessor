@@ -28,16 +28,21 @@ import numpy as np
 import math
 
 
-def mkDisp_sieveCurves(volFracPar, tetVolume, minPar, maxPar,fullerCoef,sieveCurveDiameter,sieveCurvePassing,parDiameterList):
+
+def mkDisp_sieveCurves(volFracPar,parVolTotal, tetVolume,minPar_sim, maxPar_sim, minPar_exp, maxPar_exp,fullerCoef,
+                       sieveCurveDiameter,sieveCurvePassing,parDiameterList,tempPath):
 
     """
     Variable List:
     --------------------------------------------------------------------------
     ### Inputs ###
     volFracPar:              Volume fraction of particles in the geometry
+    parVolTotal:             Total volume of particles using experimental limits
     tetVolume:               Volume of the tetrahedral mesh
-    minPar:                  Minimum particle diameter
-    maxPar:                  Maximum particle diameter
+    minPar_sim:                  Minimum particle diameter in simulation
+    maxPar_sim:                  Maximum particle diameter in simulation
+    minPar_exp:                  Minimum particle diameter in experiment
+    maxPar_exp:                  Maximum particle diameter in experiment
     fullerCoef:              Fuller coefficient of the input particle size distribution
     sieveCurveDiameter:          List of diameters for the input sieve curve
     sieveCurvePassing:          List of percent passing for the input sieve curve
@@ -52,15 +57,24 @@ def mkDisp_sieveCurves(volFracPar, tetVolume, minPar, maxPar,fullerCoef,sieveCur
     Plot.figure("Particle Sieve Curve")
 
     # Get volume of small particles and generated particles
-    totalVol = sum(4/3*math.pi*(parDiameterList/2)**3)
-    volParticles=volFracPar*tetVolume;
-    volExtra=volParticles-totalVol;
+    F_a = (maxPar_sim/maxPar_exp)**fullerCoef # Volume fraction of particles smaller than maxPar_sim
+    F_0_exp = (minPar_exp/maxPar_exp)**fullerCoef # Volume fraction of particles smaller than minPar_exp
+    # F_a_exp = (maxPar_exp/maxPar_exp)**fullerCoef # Volume fraction of particles smaller than maxPar_exp
+    # volFracSim = (F_a_exp - F_a)/(F_a_exp - F_0_exp)
+    volFracSim = (1 - F_a)/(1 - F_0_exp)
+
+    totalVol = sum(4/3*math.pi*(parDiameterList/2)**3) # Total volume of generated particles
+    volParticles=volFracPar*tetVolume # Total volume of particles in the geometry included small particles
+    volExtra=volParticles - totalVol - parVolTotal*volFracSim # Volume of small particles not included in generated particles
+ 
+
 
     # Initialize Diameters
     parDiameterList = np.flip(parDiameterList)
-    diameters = np.linspace(0,maxPar,num=1000)
+    diameters = np.linspace(0,maxPar_exp,num=1000)
     passingPercent=np.zeros(1000)
     passingPercentTheory=np.zeros(1000)
+
 
     # Get Passing Percent of Placed Particles
     for x in range(1000):
@@ -72,7 +86,7 @@ def mkDisp_sieveCurves(volFracPar, tetVolume, minPar, maxPar,fullerCoef,sieveCur
     if fullerCoef != 0:
         # Generate values for small particles
         diametersTheory = diameters
-        passingPercentTheory=100*(diametersTheory/maxPar)**fullerCoef
+        passingPercentTheory=100*(diametersTheory/maxPar_exp)**fullerCoef
 
     else:
         # Reformat sieve curve into numpy arrays for interpolation
@@ -82,11 +96,11 @@ def mkDisp_sieveCurves(volFracPar, tetVolume, minPar, maxPar,fullerCoef,sieveCur
         # Get Interpolated passingPercentTheory value for largest diameter in generated particle size distribution
         # This is used to shift the generated particle size distribution to match the input sieve curve
         for x in range(len(diametersTheory)):
-            if diametersTheory[x+1] == maxPar:
+            if diametersTheory[x+1] == maxPar_exp:
                 shiftValue = passingPercent[999]-passingPercentTheory[x+1]
                 break
-            elif (diametersTheory[x] <= maxPar) and (diametersTheory[x+1] >= maxPar):
-                shiftValue = passingPercent[999]-(passingPercentTheory[x] + (passingPercentTheory[x+1]-passingPercentTheory[x])/(diametersTheory[x+1]-diametersTheory[x])*(maxPar-diametersTheory[x]))
+            elif (diametersTheory[x] <= maxPar_exp) and (diametersTheory[x+1] >= maxPar_exp):
+                shiftValue = passingPercent[999]-(passingPercentTheory[x] + (passingPercentTheory[x+1]-passingPercentTheory[x])/(diametersTheory[x+1]-diametersTheory[x])*(maxPar_exp-diametersTheory[x]))
                 break
             else:
                 shiftValue = 0
@@ -96,11 +110,32 @@ def mkDisp_sieveCurves(volFracPar, tetVolume, minPar, maxPar,fullerCoef,sieveCur
 
     # Plotting
     Plot.plot(diametersTheory, passingPercentTheory, 'Theoretical Curve') 
+    # Plot.plot(diameters[passingPercent_exp>min(passingPercent_exp)], passingPercent_exp[passingPercent_exp>min(passingPercent_exp)], 'Experiment Data') 
     Plot.plot(diameters[passingPercent>min(passingPercent)], passingPercent[passingPercent>min(passingPercent)], 'Simulated Data (Shifted Up)') 
-
     # Plotting Formatting
     Plot.xlabel('Particle Diameter, $d$ (mm)') 
     Plot.ylabel('Percent Passing, $P$ (%)')
     Plot.grid(True)
     Plot.legend() 
+
+
+    # --- Saving to CSV with pandas ---
+    # Build a DataFrame; pandas will align columns by index automatically
+
+    mask_sim = passingPercent > min(passingPercent)
+    # mask_exp = passingPercent_exp > min(passingPercent_exp)
+
+    
+    with open(tempPath  + "seiveCurve_particle_data.dat", "w") as f:
+        f.write("Diameter_Theory\tPassing_Theory\tDiameter_Sim\tPassing_Sim\tDiameter_Exp\tPassing_Exp\n")
+        for dT, pT, dS, pS in zip(
+            diametersTheory, passingPercentTheory,
+            diameters[mask_sim], passingPercent[mask_sim],
+            # diameters[mask_exp], passingPercent_exp[mask_exp],
+        ):
+            f.write(f"{dT}\t{pT}\t{dS}\t{pS}\n")
+
+
+    print("Data saved to particle_data.dat")
+
 

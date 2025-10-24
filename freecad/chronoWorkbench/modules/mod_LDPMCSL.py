@@ -307,10 +307,14 @@ class inputWindow_LDPMCSL:
                         dimensions = [float(x.split()[0].strip("'")) for x in line.split("=")[1].strip().strip("[").strip("]").split(",")]
                 elif "cadFile" in line:
                     cadFile = line.split("=")[1].strip()
-                elif "minPar" in line:
-                    minPar = float(line.split("=")[1].strip())
-                elif "maxPar" in line:
-                    maxPar = float(line.split("=")[1].strip())
+                elif "minPar_sim" in line:
+                    minPar_sim = float(line.split("=")[1].strip())
+                elif "maxPar_sim" in line:
+                    maxPar_sim = float(line.split("=")[1].strip())
+                elif "minPar_exp" in line:
+                    minPar_exp = float(line.split("=")[1].strip())
+                elif "maxPar_exp" in line:
+                    maxPar_exp = float(line.split("=")[1].strip())
                 elif "fullerCoef" in line:
                     fullerCoef = float(line.split("=")[1].strip())
                 elif "sieveCurveDiameter" in line:
@@ -483,11 +487,13 @@ class inputWindow_LDPMCSL:
             self.form[1].gaugeWidth.setProperty('rawValue',(dimensions[4]))
             self.form[1].dogboneType.setCurrentText(dimensions[5])
         self.form[1].cadFile.setText(cadFile)
-        self.form[2].minPar.setValue(minPar)
-        self.form[2].maxPar.setValue(maxPar)
-        self.form[2].fullerCoef.setValue(fullerCoef)
-        self.form[2].sieveDiameters.setText(str(sieveCurveDiameter))
-        self.form[2].sievePassing.setText(str(sieveCurvePassing))
+        self.form[2].minPar_sim.setValue(minPar_sim)
+        self.form[2].maxPar_sim.setValue(maxPar_sim)
+        self.form[3].minPar_exp.setValue(minPar_exp)
+        self.form[3].maxPar_exp.setValue(maxPar_exp)
+        self.form[3].fullerCoef.setValue(fullerCoef)
+        self.form[3].sieveDiameters.setText(str(sieveCurveDiameter))
+        self.form[3].sievePassing.setText(str(sieveCurvePassing))
         self.form[3].wcRatio.setValue(wcRatio)
         self.form[3].waterDensity.setText(str(densityWater))
         self.form[3].cementContent.setText(str(cementC))
@@ -584,7 +590,7 @@ class inputWindow_LDPMCSL:
         [setupFile, constitutiveEQ, matParaSet, \
             numCPU, numIncrements,maxIter,placementAlg,\
             geoType, dimensions, cadFile,\
-            minPar, maxPar, fullerCoef, sieveCurveDiameter, sieveCurvePassing,\
+            minPar_sim, maxPar_sim,minPar_exp, maxPar_exp, fullerCoef, sieveCurveDiameter, sieveCurvePassing,\
             wcRatio, densityWater, cementC, flyashC, silicaC, scmC,\
             cementDensity, flyashDensity, silicaDensity, scmDensity, airFrac1, \
             fillerC, fillerDensity, airFrac2,\
