@@ -675,6 +675,7 @@ if __name__ == '__main__':
         if multiMatToggle == "Off":
             # Read the volFracPar file
             volFracPar = np.load(tempPath + "volFracPar.npy")
+            parVolTotal = np.load(tempPath + "parVolTotal.npy")
 
         # Remove the temporary files
         os.remove(Path(currentDir + "/tempGen.py"))
@@ -685,6 +686,7 @@ if __name__ == '__main__':
         os.remove(tempPath + "parDiameterList.npy")
         if multiMatToggle == "Off":
             os.remove(tempPath + "volFracPar.npy")
+            os.remove(tempPath + "parVolTotal.npy")
         os.remove(tempPath + "coord1.npy")
         os.remove(tempPath + "coord2.npy")
         os.remove(tempPath + "coord3.npy")

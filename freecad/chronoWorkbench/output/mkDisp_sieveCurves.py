@@ -127,7 +127,7 @@ def mkDisp_sieveCurves(volFracPar,parVolTotal, tetVolume,minPar_sim, maxPar_sim,
 
     
     with open(tempPath  + "seiveCurve_particle_data.dat", "w") as f:
-        f.write("Diameter_Theory\tPassing_Theory\tDiameter_Sim\tPassing_Sim\tDiameter_Exp\tPassing_Exp\n")
+        f.write("Diameter_Theory\tPassing_Theory\tDiameter_Sim\tPassing_Sim\n")
         for dT, pT, dS, pS in zip(
             diametersTheory, passingPercentTheory,
             diameters[mask_sim], passingPercent[mask_sim],

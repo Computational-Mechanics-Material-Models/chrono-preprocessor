@@ -23,7 +23,7 @@ from gen_particle                                   import gen_particle
 
 
 
-def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, maxEdgeLength, max_dist, minPar, maxPar, sieveCurveDiameter, sieveCurvePassing, wcRatio, cementC, airFrac, fullerCoef, flyashC, silicaC, scmC, fillerC, flyashDensity, silicaDensity, scmDensity, fillerDensity, cementDensity, densityWater, multiMatToggle, aggFile, multiMatFile, grainAggMin, grainAggMax, grainAggFuller, grainAggSieveD, grainAggSieveP, grainBinderMin, grainBinderMax, grainBinderFuller, grainBinderSieveD, grainBinderSieveP, grainITZMin, grainITZMax, grainITZFuller, grainITZSieveD, grainITZSieveP, tetVolume, minC, maxC, verbose):
+def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, maxEdgeLength, max_dist, minPar_sim, maxPar_sim,minPar_exp, maxPar_exp, sieveCurveDiameter, sieveCurvePassing, wcRatio, cementC, airFrac, fullerCoef, flyashC, silicaC, scmC, fillerC, flyashDensity, silicaDensity, scmDensity, fillerDensity, cementDensity, densityWater, multiMatToggle, aggFile, multiMatFile, grainAggMin, grainAggMax, grainAggFuller, grainAggSieveD, grainAggSieveP, grainBinderMin, grainBinderMax, grainBinderFuller, grainBinderSieveD, grainBinderSieveP, grainITZMin, grainITZMax, grainITZFuller, grainITZSieveD, grainITZSieveP, tetVolume, minC, maxC, verbose):
 
     # Load back in these seven matrices from their temporary files:
     # coord1, coord2, coord3, coord4, meshVertices, meshTets, surfaceNodes
@@ -123,7 +123,7 @@ def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, m
         # Shift sieve curve if needed
         if sieveCurveDiameter != (0 or None or [] or ""):
             # Shifts sieve curve to appropriate range
-            [newSieveCurveD, newSieveCurveP, NewSet, w_min, w_max] = calc_sieveCurve(minPar, maxPar, sieveCurveDiameter, sieveCurvePassing)
+            [newSieveCurveD, newSieveCurveP, NewSet, w_min, w_max] = calc_sieveCurve(minPar_exp, maxPar_exp, sieveCurveDiameter, sieveCurvePassing)
         else:
             newSieveCurveD, newSieveCurveP, w_min, w_max, NewSet = 0, 0, 0, 0, 0
 
@@ -133,7 +133,7 @@ def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, m
                                                     flyashC, silicaC, scmC, fillerC,
                                                     flyashDensity, silicaDensity, 
                                                     scmDensity, fillerDensity, cementDensity,
-                                                    densityWater, minPar, maxPar,
+                                                    densityWater, minPar_exp, maxPar_exp,
                                                     newSieveCurveD, newSieveCurveP, 
                                                     NewSet, w_min, w_max)
 
@@ -141,7 +141,7 @@ def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, m
 
         print("Status: Calculating list of particles.") 
         # Calculate list of particle diameters for placement
-        [maxParNum,parDiameterList] = gen_particleList(parVolTotal,minPar,maxPar,newSieveCurveD,\
+        [maxParNum,parDiameterList] = gen_particleList(parVolTotal,minPar_sim, maxPar_sim, minPar_exp, maxPar_exp,newSieveCurveD,\
             cdf,kappa_i,NewSet,fullerCoef)
 
         # Initialize empty particle nodes list outside geometry
@@ -222,7 +222,7 @@ def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, m
                 materialList = np.concatenate((np.ones(len(aggGrainsDiameterList))*3,np.ones(len(itzGrainsDiameterList))*1, np.ones(len(binderGrainsDiameterList))*2))
 
                 # Set minimum particle to be smallest of the three materials 
-                minPar = min(grainAggMin,grainITZMin,grainBinderMin)
+                minPar_sim = min(grainAggMin,grainITZMin,grainBinderMin)
 
             else: 
                 for i in range(2):
@@ -267,7 +267,7 @@ def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, m
                 materialList = np.concatenate((np.ones(len(aggGrainsDiameterList))*3, np.ones(len(binderGrainsDiameterList))*2))
 
                 # Set minimum particle to be smallest of the three materials 
-                minPar = min(grainAggMin,grainBinderMin)
+                minPar_sim = min(grainAggMin,grainBinderMin)
 
 
     # Create empty lists if not cementStructure
@@ -288,8 +288,8 @@ def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, m
                 process_pool = multiprocessing.Pool(numCPU)
 
                 outputMPI = process_pool.map(functools.partial(gen_particleMPI, surfaceNodes,maxParNum, minC, maxC, meshVertices, \
-                    meshTets, coord1,coord2,coord3,coord4,newMaxIter,maxIter,minPar,\
-                    maxPar,parOffset,verbose,parDiameterList,maxEdgeLength,max_dist,internalNodes), parDiameterList[particlesPlaced:particlesPlaced+math.floor(len(parDiameterList)/numIncrements)])
+                    meshTets, coord1,coord2,coord3,coord4,newMaxIter,maxIter,minPar_sim,\
+                    maxPar_sim,parOffset,verbose,parDiameterList,maxEdgeLength,max_dist,internalNodes), parDiameterList[particlesPlaced:particlesPlaced+math.floor(len(parDiameterList)/numIncrements)])
 
                 nodeMPI = np.array(outputMPI)[:,0:3]
                 diameter = np.array(outputMPI)[:,3]
@@ -304,25 +304,25 @@ def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, m
                     internalNodes[particlesPlaced+x,:] = nodeMPI[x,:]
 
                     # Obtain extents for floating bin for node to test
-                    binMin = np.array(([nodeMPI[x,0]-diameter[x]/2-maxPar/2-parOffset,\
-                        nodeMPI[x,1]-diameter[x]/2-maxPar/2-parOffset,nodeMPI[x,2]-\
-                        diameter[x]/2-maxPar/2-parOffset]))
-                    binMax = np.array(([nodeMPI[x,0]+diameter[x]/2+maxPar/2+parOffset,\
-                        nodeMPI[x,1]+diameter[x]/2+maxPar/2+parOffset,nodeMPI[x,2]+\
-                        diameter[x]/2+maxPar/2+parOffset]))
+                    binMin = np.array(([nodeMPI[x,0]-diameter[x]/2-maxPar_sim/2-parOffset,\
+                        nodeMPI[x,1]-diameter[x]/2-maxPar_sim/2-parOffset,nodeMPI[x,2]-\
+                        diameter[x]/2-maxPar_sim/2-parOffset]))
+                    binMax = np.array(([nodeMPI[x,0]+diameter[x]/2+maxPar_sim/2+parOffset,\
+                        nodeMPI[x,1]+diameter[x]/2+maxPar_sim/2+parOffset,nodeMPI[x,2]+\
+                        diameter[x]/2+maxPar_sim/2+parOffset]))
 
                     # Check if particle overlapping any just added particles (ignore first one placed)
                     if x > 0:
 
                         overlap = check_particleOverlapMPI(nodeMPI[x,:],diameter[x],binMin,\
-                            binMax,minPar,parOffset,nodeMPI[0:x],diameter[0:x])
+                            binMax,minPar_sim,parOffset,nodeMPI[0:x],diameter[0:x])
 
                         if overlap == True:
 
                             [newMaxIter,node,iterReq] = gen_particle(surfaceNodes,\
                                 parDiameterList[particlesPlaced+x], meshVertices, \
-                                meshTets,newMaxIter,maxIter,minPar,\
-                                maxPar,parOffset,parDiameterList,coord1,coord2,coord3,coord4,maxEdgeLength,max_dist,internalNodes)
+                                meshTets,newMaxIter,maxIter,minPar_sim,\
+                                maxPar_sim,parOffset,parDiameterList,coord1,coord2,coord3,coord4,maxEdgeLength,max_dist,internalNodes)
                             
                             internalNodes[particlesPlaced+x,:] = node[0,:]
 
@@ -334,7 +334,7 @@ def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, m
         for x in range(particlesPlaced,len(parDiameterList)):
 
             # Generate particle
-            [newMaxIter,node,iterReq] = gen_particle(surfaceNodes,parDiameterList[x],meshVertices,meshTets,newMaxIter,maxIter,minPar,maxPar,\
+            [newMaxIter,node,iterReq] = gen_particle(surfaceNodes,parDiameterList[x],meshVertices,meshTets,newMaxIter,maxIter,minPar_sim,maxPar_sim,\
                 parOffset,parDiameterList,coord1,coord2,coord3,coord4,maxEdgeLength,max_dist,internalNodes)
 
 
@@ -380,6 +380,7 @@ def gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, m
 
         # Save the volFracPar to a temporary file
         np.save(tempPath + 'volFracPar.npy', volFracPar)
+        np.save(tempPath + 'parVolTotal.npy', parVolTotal)
 
 
 
