@@ -87,6 +87,7 @@ def gen_LDPMCSL_periodicMesh(cadFile, analysisName, geoName, meshName, minPar, d
     result = subprocess.run(gmsh_command, shell=True, capture_output=True, text=True)
 
     cadFile = str(output_mesh_path)
+    cadFile = re.sub("\\\\", "/", cadFile)
 
     return cadFile
 

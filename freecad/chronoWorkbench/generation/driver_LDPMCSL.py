@@ -278,6 +278,10 @@ def driver_LDPMCSL(self,fastGen,tempPath):
 
     # Generate geometry
     self.form[5].statusWindow.setText("Status: Generating geometry.") 
+    if periodicToggle == "On":
+        geoType = 'Import CAD or Mesh' # This is a hack to improve the visualization, as the periodic meshing is a quasi-imported mesh
+        # Build the surface mesh based on the simulation particle size
+        cadFile = gen_LDPMCSL_periodicMesh(cadFile,analysisName,geoName,meshName,minPar_sim,dimensions,tempPath)
     genGeo = gen_LDPMCSL_geometry(dimensions,geoType,geoName,cadFile)
     self.form[5].progressBar.setValue(2) 
 
@@ -296,13 +300,7 @@ def driver_LDPMCSL(self,fastGen,tempPath):
 
     # Generate surface mesh
     self.form[5].statusWindow.setText("Status: Generating surface mesh.") 
-    if periodicToggle == "On":
-        geoType = 'Import CAD or Mesh' # This is a hack to improve the visualization, as the periodic meshing is a quasi-imported mesh
-        # Build the surface mesh based on the simulation particle size
-        cadFile = gen_LDPMCSL_periodicMesh(cadFile,analysisName,geoName,meshName,minPar_sim,dimensions,tempPath)
-        [meshVertices,meshTets,surfaceNodes,surfaceFaces] = gen_LDPMCSL_initialMesh(cadFile,analysisName,geoName,meshName,minPar_sim)
-    else:
-        [meshVertices,meshTets,surfaceNodes,surfaceFaces] = gen_LDPMCSL_initialMesh(cadFile,analysisName,geoName,meshName,minPar_sim)
+    [meshVertices,meshTets,surfaceNodes,surfaceFaces] = gen_LDPMCSL_initialMesh(cadFile,analysisName,geoName,meshName,minPar_sim)
 
     self.form[5].progressBar.setValue(5) 
 
