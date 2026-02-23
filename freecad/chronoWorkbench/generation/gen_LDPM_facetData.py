@@ -93,10 +93,17 @@ def gen_LDPM_facetData(allNodes,allTets,tetFacets,facetCenters,\
         [ -v[:,1], v[:,0], zeros]]))
     identity = np.dstack([np.eye(3)]*len(v))
     mulNormalsPn = np.matmul(np.expand_dims(pn.reshape(-1,3), axis=1),np.expand_dims(facetNormals, axis=2)).T
-    used_for_R = (np.matmul(ssc.T,ssc.T).T)*(1-mulNormalsPn)/\
-        (np.matmul(np.expand_dims(v.reshape(-1,3), axis=1),np.expand_dims(v, axis=2)).T) 
-
-    used_for_R[np.isnan(used_for_R)]=0
+    rotation_numerator = (np.matmul(ssc.T, ssc.T).T) * (1 - mulNormalsPn)
+    rotation_denominator = np.matmul(
+        np.expand_dims(v.reshape(-1, 3), axis=1),
+        np.expand_dims(v, axis=2)
+    ).T
+    used_for_R = np.divide(
+        rotation_numerator,
+        rotation_denominator,
+        out=np.zeros_like(rotation_numerator),
+        where=np.abs(rotation_denominator) > 1e-16,
+    )
 
     R = identity + ssc + used_for_R
 
