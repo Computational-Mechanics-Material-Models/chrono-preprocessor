@@ -32,7 +32,7 @@ import femmesh.femmesh2mesh as mesh2mesh #type: ignore
 import Mesh #type: ignore
 
 
-def gen_LDPMCSL_initialMesh(cadFile,analysisName, geoName, meshName, minPar):
+def gen_LDPMCSL_initialMesh(cadFile,analysisName, geoName, meshName, minPar, linkToAnalysis=True):
 
     """
     Variable List:
@@ -102,9 +102,12 @@ def gen_LDPMCSL_initialMesh(cadFile,analysisName, geoName, meshName, minPar):
         else:
             raise AttributeError("Gmsh mesh object missing 'Part'/'Shape' attribute")
         App.ActiveDocument.recompute()
-        # Adjust relative links
-        App.ActiveDocument.getObject(meshName).adjustRelativeLinks(App.ActiveDocument.getObject(analysisName))
-        App.ActiveDocument.getObject(analysisName).addObject(App.ActiveDocument.getObject(meshName))
+        # Adjust relative links unless caller opts out (external packaging mode)
+        if linkToAnalysis and analysisName not in [None, ""]:
+            analysis_obj = App.ActiveDocument.getObject(analysisName)
+            if analysis_obj is not None:
+                App.ActiveDocument.getObject(meshName).adjustRelativeLinks(analysis_obj)
+                analysis_obj.addObject(App.ActiveDocument.getObject(meshName))
 
         # Run Gmsh to create the mesh
         gmsh_mesh = gmsh(femmesh_obj)
@@ -118,21 +121,10 @@ def gen_LDPMCSL_initialMesh(cadFile,analysisName, geoName, meshName, minPar):
 
     App.ActiveDocument.recompute()
 
-    # Get mesh and initialize lists
+    # Get mesh and extract arrays
     femmesh = App.ActiveDocument.getObjectsByLabel(meshName)[0].FemMesh
-    meshVertices = []
-    meshTets = []
-
-    # Get the vertex coordinates from the mesh  
-    for v in femmesh.Nodes:
-        meshVertices.append(femmesh.Nodes[v])
-    meshVertices = np.asarray(meshVertices)
-
-    # Get the tetrahedra information from the mesh
-    for v in femmesh.Volumes:
-        meshTets.append(femmesh.getElementNodes(v))
-    meshTets = np.asarray(meshTets)
-    meshTets = (meshTets).astype(int)
+    meshVertices = np.asarray(list(femmesh.Nodes.values()))
+    meshTets = np.asarray([femmesh.getElementNodes(v) for v in femmesh.Volumes], dtype=int)
 
 
 
@@ -140,20 +132,10 @@ def gen_LDPMCSL_initialMesh(cadFile,analysisName, geoName, meshName, minPar):
     out_mesh = Mesh.Mesh(out_mesh)
 
 
-    # Get mesh and initialize lists
-    surfaceNodes = []
-    surfaceFaces = []
-
-
-    # Get the vertex coordinates from the mesh  
-    for v in range(len(out_mesh.getPoints(0)[0])):
-        surfaceNodes.append(out_mesh.getFaces(0)[0][v])
-    surfaceNodes = np.asarray(surfaceNodes)
-
-    # Get the faces information from the mesh
-    for v in range(len(out_mesh.getFaces(0)[1])):
-        surfaceFaces.append(out_mesh.getFaces(0)[1][v])
-    surfaceFaces = np.asarray(surfaceFaces)
+    # Extract surface nodes/faces in one pass
+    surface_nodes_raw, surface_faces_raw = out_mesh.getFaces(0)
+    surfaceNodes = np.asarray(surface_nodes_raw)
+    surfaceFaces = np.asarray(surface_faces_raw)
 
 
     return meshVertices, meshTets, surfaceNodes, surfaceFaces

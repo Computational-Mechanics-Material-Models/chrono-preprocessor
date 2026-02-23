@@ -148,6 +148,7 @@ class inputWindow_LDPMCSL:
         # Run generation for LDPM or CSL
         QtCore.QObject.connect(self.form[5].generate, QtCore.SIGNAL("clicked()"), self.generationDriver)
         QtCore.QObject.connect(self.form[5].generateFast, QtCore.SIGNAL("clicked()"), self.generationDriverFast)
+        QtCore.QObject.connect(self.form[5].externalGenerate, QtCore.SIGNAL("clicked()"), self.generationDriverExternal)
         QtCore.QObject.connect(self.form[5].writePara, QtCore.SIGNAL("clicked()"), self.writeParameters)
 
         # Run debugging generation of single tetrahedron
@@ -162,9 +163,8 @@ class inputWindow_LDPMCSL:
         tempPath = tempfile.gettempdir() + "/chronoConc" + str(int(np.random.uniform(1e7,1e8))) + '/'
         os.mkdir(tempPath)
 
-        fastGen = False
         mkParameters(self,"LDPMCSL",tempPath)
-        driver_LDPMCSL(self,fastGen,tempPath)
+        driver_LDPMCSL(self,"normal",tempPath)
 
     def generationDriverFast(self):
 
@@ -172,9 +172,17 @@ class inputWindow_LDPMCSL:
         tempPath = tempfile.gettempdir() + "/chronoConc" + str(int(np.random.uniform(1e7,1e8))) + '/'
         os.mkdir(tempPath)
 
-        fastGen = True
         mkParameters(self,"LDPMCSL",tempPath)
-        driver_LDPMCSL(self,fastGen,tempPath)
+        driver_LDPMCSL(self,"fast",tempPath)
+
+    def generationDriverExternal(self):
+
+        # Make a temporary path location
+        tempPath = tempfile.gettempdir() + "/chronoConc" + str(int(np.random.uniform(1e7,1e8))) + '/'
+        os.mkdir(tempPath)
+
+        mkParameters(self,"LDPMCSL",tempPath)
+        driver_LDPMCSL(self,"external",tempPath)
 
 
     def getStandardButtons(self):

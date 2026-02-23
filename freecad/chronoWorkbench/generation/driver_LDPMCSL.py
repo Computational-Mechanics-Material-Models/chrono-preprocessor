@@ -25,6 +25,7 @@
 import os
 import sys
 import re
+import json
 import shutil
 import time
 import tempfile
@@ -128,7 +129,42 @@ from freecad.chronoWorkbench.output.mkIges_LDPMCSL_flowEdges              import
 
 
 
-def driver_LDPMCSL(self,fastGen,tempPath):
+def _copy_external_input(source_file, temp_path, output_name):
+
+    if source_file in [None, "", 0, []]:
+        return source_file
+
+    try:
+        source_path = Path(source_file)
+        if source_path.is_file():
+            target_path = Path(temp_path) / output_name
+            shutil.copy2(source_path, target_path)
+            return str(target_path)
+    except Exception:
+        pass
+
+    return source_file
+
+
+def _json_safe(value):
+
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, (np.integer, np.floating)):
+        return value.item()
+    return value
+
+
+def driver_LDPMCSL(self,runMode,tempPath):
+
+    if isinstance(runMode, bool):
+        runMode = "fast" if runMode else "normal"
+    if runMode not in ["normal", "fast", "external"]:
+        raise ValueError("runMode must be one of: normal, fast, external")
 
     # Read in inputs from input panel
     [setupFile, constitutiveEQ, matParaSet, \
@@ -198,17 +234,22 @@ def driver_LDPMCSL(self,fastGen,tempPath):
     start_time = time.time()
 
 
-    # Store document
-    docGui = Gui.activeDocument()
-
-    # Make new document and set view if does not exisit
-    try:
-        docGui.activeView().viewAxonometric()
-    except:
-        App.newDocument("Unnamed")
+    if runMode == "external":
+        # External packaging only needs a document context for geometry/meshing.
+        if App.ActiveDocument is None:
+            App.newDocument("Unnamed")
+    else:
+        # Store document
         docGui = Gui.activeDocument()
-        docGui.activeView().viewAxonometric()
-    Gui.runCommand('Std_PerspectiveCamera',1)
+
+        # Make new document and set view if does not exisit
+        try:
+            docGui.activeView().viewAxonometric()
+        except:
+            App.newDocument("Unnamed")
+            docGui = Gui.activeDocument()
+            docGui.activeView().viewAxonometric()
+        Gui.runCommand('Std_PerspectiveCamera',1)
 
     try:
         sieveCurveDiameter = ast.literal_eval(sieveCurveDiameter)
@@ -286,21 +327,32 @@ def driver_LDPMCSL(self,fastGen,tempPath):
     self.form[5].progressBar.setValue(2) 
 
     # Set view
-    docGui.activeView().viewAxonometric()
-    Gui.SendMsgToActiveView("ViewFit")
-    Gui.runCommand('Std_DrawStyle',6)
-    Gui.runCommand('Std_PerspectiveCamera',1)
+    if runMode != "external":
+        docGui.activeView().viewAxonometric()
+        Gui.SendMsgToActiveView("ViewFit")
+        Gui.runCommand('Std_DrawStyle',6)
+        Gui.runCommand('Std_PerspectiveCamera',1)
 
 
     # Generate analysis objects
-    self.form[5].statusWindow.setText("Status: Generating analysis objects.") 
-    genAna = gen_LDPMCSL_analysis(analysisName,materialName)
+    if runMode == "external":
+        self.form[5].statusWindow.setText("Status: Skipping analysis objects for external generation.")
+    else:
+        self.form[5].statusWindow.setText("Status: Generating analysis objects.") 
+        genAna = gen_LDPMCSL_analysis(analysisName,materialName)
     self.form[5].progressBar.setValue(3) 
 
 
     # Generate surface mesh
     self.form[5].statusWindow.setText("Status: Generating surface mesh.") 
-    [meshVertices,meshTets,surfaceNodes,surfaceFaces] = gen_LDPMCSL_initialMesh(cadFile,analysisName,geoName,meshName,minPar_sim)
+    [meshVertices,meshTets,surfaceNodes,surfaceFaces] = gen_LDPMCSL_initialMesh(
+        cadFile,
+        analysisName,
+        geoName,
+        meshName,
+        minPar_sim,
+        linkToAnalysis=(runMode != "external"),
+    )
 
     self.form[5].progressBar.setValue(5) 
 
@@ -366,7 +418,7 @@ def driver_LDPMCSL(self,fastGen,tempPath):
 
 
 
-    if fastGen == True:
+    if runMode in ["fast", "external"]:
 
         ########################## Alternative Route to Farm Out Particle Processes ##############################
 
@@ -382,6 +434,114 @@ def driver_LDPMCSL(self,fastGen,tempPath):
         np.save(tempPath + "meshVertices.npy", meshVertices)
         np.save(tempPath + "meshTets.npy", meshTets)
         np.save(tempPath + "surfaceNodes.npy", surfaceNodes)
+
+        if runMode == "external":
+            np.save(tempPath + "surfaceFaces.npy", surfaceFaces)
+
+            aggFileBundle = _copy_external_input(aggFile, tempPath, "aggFile" + Path(str(aggFile)).suffix)
+            multiMatFileBundle = _copy_external_input(multiMatFile, tempPath, "multiMatFile" + Path(str(multiMatFile)).suffix)
+            fiberFileBundle = _copy_external_input(fiberFile, tempPath, "fiberFile" + Path(str(fiberFile)).suffix)
+
+            manifest = {
+                "geoName": geoName,
+                "elementType": elementType,
+                "tempPath": tempPath,
+                "outDir": outDir,
+                "outName": outName,
+                "modelType": modelType,
+                "dataFilesGen": dataFilesGen,
+                "visFilesGen": visFilesGen,
+                "singleTetGen": singleTetGen,
+                "numCPU": numCPU,
+                "numIncrements": numIncrements,
+                "maxIter": maxIter,
+                "parOffset": parOffset,
+                "maxEdgeLength": maxEdgeLength,
+                "max_dist": max_dist,
+                "minPar_sim": minPar_sim,
+                "maxPar_sim": maxPar_sim,
+                "minPar_exp": minPar_exp,
+                "maxPar_exp": maxPar_exp,
+                "sieveCurveDiameter": sieveCurveDiameter,
+                "sieveCurvePassing": sieveCurvePassing,
+                "wcRatio": wcRatio,
+                "cementC": cementC,
+                "airFrac": airFrac,
+                "fullerCoef": fullerCoef,
+                "flyashC": flyashC,
+                "silicaC": silicaC,
+                "scmC": scmC,
+                "fillerC": fillerC,
+                "flyashDensity": flyashDensity,
+                "silicaDensity": silicaDensity,
+                "scmDensity": scmDensity,
+                "fillerDensity": fillerDensity,
+                "cementDensity": cementDensity,
+                "densityWater": densityWater,
+                "multiMatToggle": multiMatToggle,
+                "aggFile": aggFileBundle,
+                "multiMatFile": multiMatFileBundle,
+                "multiMatRule": multiMatRule,
+                "grainAggMin": grainAggMin,
+                "grainAggMax": grainAggMax,
+                "grainAggFuller": grainAggFuller,
+                "grainAggSieveD": grainAggSieveD,
+                "grainAggSieveP": grainAggSieveP,
+                "grainBinderMin": grainBinderMin,
+                "grainBinderMax": grainBinderMax,
+                "grainBinderFuller": grainBinderFuller,
+                "grainBinderSieveD": grainBinderSieveD,
+                "grainBinderSieveP": grainBinderSieveP,
+                "grainITZMin": grainITZMin,
+                "grainITZMax": grainITZMax,
+                "grainITZFuller": grainITZFuller,
+                "grainITZSieveD": grainITZSieveD,
+                "grainITZSieveP": grainITZSieveP,
+                "tetVolume": tetVolume,
+                "minC": [float(minC[0]), float(minC[1]), float(minC[2])],
+                "maxC": [float(maxC[0]), float(maxC[1]), float(maxC[2])],
+                "verbose": verbose,
+                "fiberToggle": fiberToggle,
+                "fiberCutting": fiberCutting,
+                "fiberDiameter": fiberDiameter,
+                "fiberLength": fiberLength,
+                "fiberVol": fiberVol,
+                "fiberOrientation1": fiberOrientation1,
+                "fiberOrientation2": fiberOrientation2,
+                "fiberOrientation3": fiberOrientation3,
+                "fiberPref": fiberPref,
+                "fiberFile": fiberFileBundle,
+                "fiberIntersections": fiberIntersections,
+                "htcToggle": htcToggle,
+                "htcLength": htcLength,
+            }
+
+            with open(Path(tempPath + "external_manifest_ldpmcsl.json"), "w", encoding="utf-8") as f:
+                json.dump(_json_safe(manifest), f, indent=2)
+
+            workbenchRoot = str(Path(__file__).resolve().parents[3])
+            runnerPath = Path(tempPath + "run_external_ldpmcsl.py")
+            with open(runnerPath, "w", encoding="utf-8") as f:
+                f.write(
+                    "import sys\n"
+                    "from pathlib import Path\n\n"
+                    "WORKBENCH_ROOT = r\"" + workbenchRoot.replace("\\", "\\\\") + "\"\n"
+                    "if WORKBENCH_ROOT not in sys.path:\n"
+                    "    sys.path.insert(0, WORKBENCH_ROOT)\n\n"
+                    "from freecad.chronoWorkbench.generation.run_LDPMCSL_external import run_external_bundle\n\n"
+                    "if __name__ == '__main__':\n"
+                    "    run_external_bundle(Path(__file__).resolve().parent)\n"
+                )
+
+            file_names = os.listdir(tempPath)
+            for file_name in file_names:
+                shutil.move(os.path.join(tempPath, file_name), Path(outDir + outName))
+
+            self.form[5].statusWindow.setText("Status: External generation package created.")
+            self.form[5].progressBar.setValue(100)
+
+            print("External generation package written to: " + str(Path(outDir + outName)))
+            return
 
         # Get the current directory 
         currentDir = os.path.dirname(os.path.realpath(__file__))

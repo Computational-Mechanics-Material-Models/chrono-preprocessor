@@ -5,21 +5,35 @@ import time
 import multiprocessing
 import functools
 from pathlib import Path
-
-
 import sys
-import FreeCAD as App
 
-from freecad.chronoWorkbench.input.read_multiMat_file                     import read_multiMat_file
-from check_multiMat_size                                    import check_multiMat_size
-from sort_multiMat_voxels                                   import sort_multiMat_voxels
-from calc_sieveCurve                                import calc_sieveCurve
-from calc_parVolume                                 import calc_parVolume
-from gen_particleList                               import gen_particleList
-from gen_LDPMCSL_subParticle                                import gen_LDPMCSL_subParticle
-from gen_particleMPI                                import gen_particleMPI
-from check_particleOverlapMPI                       import check_particleOverlapMPI
-from gen_particle                                   import gen_particle
+
+ROOT_DIR = str(Path(__file__).resolve().parents[3])
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
+try:
+    from freecad.chronoWorkbench.input.read_multiMat_file                  import read_multiMat_file
+    from freecad.chronoWorkbench.generation.check_multiMat_size            import check_multiMat_size
+    from freecad.chronoWorkbench.generation.sort_multiMat_voxels           import sort_multiMat_voxels
+    from freecad.chronoWorkbench.generation.calc_sieveCurve                import calc_sieveCurve
+    from freecad.chronoWorkbench.generation.calc_parVolume                 import calc_parVolume
+    from freecad.chronoWorkbench.generation.gen_particleList               import gen_particleList
+    from freecad.chronoWorkbench.generation.gen_LDPMCSL_subParticle        import gen_LDPMCSL_subParticle
+    from freecad.chronoWorkbench.generation.gen_particleMPI                import gen_particleMPI
+    from freecad.chronoWorkbench.generation.check_particleOverlapMPI       import check_particleOverlapMPI
+    from freecad.chronoWorkbench.generation.gen_particle                   import gen_particle
+except ImportError:
+    from freecad.chronoWorkbench.input.read_multiMat_file                  import read_multiMat_file
+    from check_multiMat_size                                               import check_multiMat_size
+    from sort_multiMat_voxels                                              import sort_multiMat_voxels
+    from calc_sieveCurve                                                   import calc_sieveCurve
+    from calc_parVolume                                                    import calc_parVolume
+    from gen_particleList                                                  import gen_particleList
+    from gen_LDPMCSL_subParticle                                           import gen_LDPMCSL_subParticle
+    from gen_particleMPI                                                   import gen_particleMPI
+    from check_particleOverlapMPI                                          import check_particleOverlapMPI
+    from gen_particle                                                      import gen_particle
 
 
 
