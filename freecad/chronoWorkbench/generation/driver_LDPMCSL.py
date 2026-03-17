@@ -536,6 +536,20 @@ def driver_LDPMCSL(self,runMode,tempPath):
             file_names = os.listdir(tempPath)
             for file_name in file_names:
                 shutil.move(os.path.join(tempPath, file_name), Path(outDir + outName))
+            
+            finalDir = Path(outDir + outName)
+
+            # Fix manifest paths to point to the final directory
+            manifest["tempPath"] = str(finalDir)
+
+            # Fix file bundle paths
+            manifest["multiMatFile"] = str(finalDir / Path(multiMatFileBundle).name)
+            manifest["aggFile"] = str(finalDir / Path(aggFileBundle).name)
+            manifest["fiberFile"] = str(finalDir / Path(fiberFileBundle).name)
+
+            # Rewrite manifest JSON in the final directory
+            with open(finalDir / "external_manifest_ldpmcsl.json", "w", encoding="utf-8") as f:
+                json.dump(_json_safe(manifest), f, indent=2)
 
             self.form[5].statusWindow.setText("Status: External generation package created.")
             self.form[5].progressBar.setValue(100)
@@ -799,7 +813,7 @@ from gen_LDPMCSL_multiStep   import gen_LDPMCSL_multiStep
 
 def main():
                 
-    generation = gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, maxEdgeLength, max_dist, minPar, maxPar, minPar_exp, maxPar_exp, sieveCurveDiameter, sieveCurvePassing, wcRatio, cementC, airFrac, fullerCoef, flyashC, silicaC, scmC, fillerC, flyashDensity, silicaDensity, scmDensity, fillerDensity, cementDensity, densityWater, multiMatToggle, aggFile, multiMatFile, grainAggMin, grainAggMax, grainAggFuller, grainAggSieveD, grainAggSieveP, grainBinderMin, grainBinderMax, grainBinderFuller, grainBinderSieveD, grainBinderSieveP, grainITZMin, grainITZMax, grainITZFuller, grainITZSieveD, grainITZSieveP, tetVolume, minC, maxC, verbose)
+    generation = gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, maxEdgeLength, max_dist, minPar_sim, maxPar_sim, minPar_exp, maxPar_exp, sieveCurveDiameter, sieveCurvePassing, wcRatio, cementC, airFrac, fullerCoef, flyashC, silicaC, scmC, fillerC, flyashDensity, silicaDensity, scmDensity, fillerDensity, cementDensity, densityWater, multiMatToggle, aggFile, multiMatFile, grainAggMin, grainAggMax, grainAggFuller, grainAggSieveD, grainAggSieveP, grainBinderMin, grainBinderMax, grainBinderFuller, grainBinderSieveD, grainBinderSieveP, grainITZMin, grainITZMax, grainITZFuller, grainITZSieveD, grainITZSieveP, tetVolume, minC, maxC, verbose)
                 
                 
 if __name__ == '__main__':

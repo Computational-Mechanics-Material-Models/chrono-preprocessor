@@ -60,9 +60,9 @@ def gen_particleList(parVolTotal, minPar_sim, maxPar_sim, newSieveCurveD, cdf, k
     F_0_exp = (minPar_exp/maxPar_exp)**fullerCoef # Volume fraction of particles smaller than minPar_exp
     F_a_exp = (maxPar_exp/maxPar_exp)**fullerCoef # Volume fraction of particles smaller than maxPar_exp
     
-    print("F_0: ", F_0, " F_a: ", F_a, " F_0_exp: ", F_0_exp, " F_a_exp: ", F_a_exp)
+    # print("F_0: ", F_0, " F_a: ", F_a, " F_0_exp: ", F_0_exp, " F_a_exp: ", F_a_exp)
     volFracSim = (F_a - F_0)/(F_a_exp - F_0_exp)
-    print("Volume Fraction within Simulation Limits: ", volFracSim)
+    # print("Volume Fraction within Simulation Limits: ", volFracSim)
     parVolTotal = parVolTotal*volFracSim # Adjust total particle volume based on simulation size limits    
     
 
@@ -72,19 +72,16 @@ def gen_particleList(parVolTotal, minPar_sim, maxPar_sim, newSieveCurveD, cdf, k
     
     # Determine maximum number of particles
     maxparNum = np.ceil(parVolTotal/smallparVolume)
-    print("Maximum Number of Particles: ", maxparNum)
+    # print("Maximum Number of Particles: ", maxparNum)
     # Initialize arrays for particle diameters and volumes
     parDiameter = np.zeros(int(maxparNum))
     parVol = np.zeros(int(maxparNum))
 
     # Remove particles below minPar_sim or above maxPar_sim
 
-    print("minPar_simulation: ", minPar_sim, " maxPar_simulation: ", maxPar_sim)
-
     P_minPar_sim = (1-(minPar_sim/minPar_exp)**(-q))/(1-minPar_exp**q/maxPar_exp**q)
     P_maxPar_sim = (1-(maxPar_sim/minPar_exp)**(-q))/(1-minPar_exp**q/maxPar_exp**q)
-
-    print("P_minPar_sim: ", P_minPar_sim, " P_maxPar_sim: ", P_maxPar_sim)
+    # print("P_minPar_sim: ", P_minPar_sim, " P_maxPar_sim: ", P_maxPar_sim)
     
 
     # Counter for particle array indexing

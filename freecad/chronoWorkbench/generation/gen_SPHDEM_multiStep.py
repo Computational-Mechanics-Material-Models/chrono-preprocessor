@@ -161,6 +161,9 @@ def gen_SPHDEM_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, ma
     # Save the volFracPar to a temporary file
     np.save(tempPath + 'volFracPar.npy', volFracPar)
 
+    # Save the parVolTotal to a temporary file
+    np.save(tempPath + 'parVolTotal.npy', parVolTotal)
+
 
     #placementTime = round(time.time() - start_time,2)   
     nParticles = len(parDiameterList)

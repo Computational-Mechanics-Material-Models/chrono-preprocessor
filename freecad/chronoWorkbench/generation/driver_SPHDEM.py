@@ -382,6 +382,8 @@ if __name__ == '__main__':
         # Read the volFracPar file
         volFracPar = np.load(tempPath + "volFracPar.npy")
 
+        parVolTotal = np.load(tempPath + "parVolTotal.npy")
+
         # Remove the temporary files
         os.remove(Path(currentDir + "/tempGen.py"))
 
@@ -730,7 +732,10 @@ if __name__ == '__main__':
     self.form[4].progressBar.setValue(100) 
 
     # Display sieve curve data
-    mkDisp_sieveCurves(volFracPar, tetVolume, minPar, maxPar,fullerCoef,sieveCurveDiameter,sieveCurvePassing,parDiameterList)
+    
+    outDir2 = os.path.join(outDir, outName.lstrip("/")) + os.sep
+    mkDisp_sieveCurves(volFracPar, parVolTotal, tetVolume, minPar, maxPar,fullerCoef,sieveCurveDiameter,sieveCurvePassing,parDiameterList,outDir2)
+
 
     # Switch back to model window
     mw=Gui.getMainWindow()
