@@ -77,9 +77,12 @@ def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
         iterReq = iterReq + 3
 
         if iterReq >= len(randomN1):
-            print("This fiber has exceeeded the %r specified maximum iterations allowed." % (maxIter))
-            print('Now exitting...')
-            exit()
+            error_msg = "Fiber placement has exceeded the maximum number of iterations allowed."
+            print(error_msg)
+            raise RuntimeError(error_msg)
+            #print("This fiber has exceeeded the %r specified maximum iterations allowed." % (maxIter))
+            #print('Now exitting...')
+            # exit()
 
         # Random point selection in random tet prism container
         # tetIndex = int(np.around(randomN1[iterReq] * len(tets))) - 1
@@ -108,7 +111,8 @@ def gen_LDPMCSL_fibers(vertices,tets,coord1,coord2,coord3,coord4,maxIter,\
         
            
         # Generate fiber orientaion
-        if fiberOrientation == []:
+        # if fiberOrientation == []:
+        if np.allclose(fiberOrientation, np.zeros(3)):
 
             # Option for Totally Random Orientation (Get spherical -> Cartesian -> Normalize)
 

@@ -170,7 +170,7 @@ def driver_LDPMCSL(self,runMode,tempPath):
     [setupFile, constitutiveEQ, matParaSet, \
         numCPU, numIncrements,maxIter,placementAlg,\
         geoType, dimensions, cadFile,\
-        minPar_sim, maxPar_sim, minPar_exp, maxPar_exp, fullerCoef, sieveCurveDiameter, sieveCurvePassing,\
+        minPar, maxPar, minPar_exp, maxPar_exp, fullerCoef, sieveCurveDiameter, sieveCurvePassing,\
         wcRatio, densityWater, cementC, flyashC, silicaC, scmC,\
         cementDensity, flyashDensity, silicaDensity, scmDensity, airFrac1, \
         fillerC, fillerDensity, airFrac2,\
@@ -184,10 +184,10 @@ def driver_LDPMCSL(self,runMode,tempPath):
         outDir, dataFilesGen, visFilesGen, singleTetGen, modelType] = read_LDPMCSL_inputs(self.form)
 
     # Ensure simulation particle size bounds are within experimental bounds
-    if minPar_sim < minPar_exp:
-        minPar_sim = minPar_exp
-    if maxPar_sim > maxPar_exp or maxPar_sim < minPar_sim:
-        maxPar_sim = maxPar_exp # Set to max experimental if invalid
+    if minPar < minPar_exp:
+        minPar = minPar_exp
+    if maxPar > maxPar_exp or maxPar < minPar:
+        maxPar = maxPar_exp # Set to max experimental if invalid
 
     # Make output directory if does not exist
     try:
@@ -322,7 +322,7 @@ def driver_LDPMCSL(self,runMode,tempPath):
     if periodicToggle == "On":
         geoType = 'Import CAD or Mesh' # This is a hack to improve the visualization, as the periodic meshing is a quasi-imported mesh
         # Build the surface mesh based on the simulation particle size
-        cadFile = gen_LDPMCSL_periodicMesh(cadFile,analysisName,geoName,meshName,minPar_sim,dimensions,tempPath)
+        cadFile = gen_LDPMCSL_periodicMesh(cadFile,analysisName,geoName,meshName,minPar,dimensions,tempPath)
     genGeo = gen_LDPMCSL_geometry(dimensions,geoType,geoName,cadFile)
     self.form[5].progressBar.setValue(2) 
 
@@ -350,7 +350,7 @@ def driver_LDPMCSL(self,runMode,tempPath):
         analysisName,
         geoName,
         meshName,
-        minPar_sim,
+        minPar,
         linkToAnalysis=(runMode != "external"),
     )
 
@@ -401,7 +401,7 @@ def driver_LDPMCSL(self,runMode,tempPath):
 
 
     # Basic Calcs
-    parOffset = particleOffsetCoef*minPar_sim # using simulation particle size instead of experimental size for offset
+    parOffset = particleOffsetCoef*minPar # using simulation particle size instead of experimental size for offset
 
     
     # Store coordinates of meshTets in new format
@@ -458,8 +458,8 @@ def driver_LDPMCSL(self,runMode,tempPath):
                 "parOffset": parOffset,
                 "maxEdgeLength": maxEdgeLength,
                 "max_dist": max_dist,
-                "minPar_sim": minPar_sim,
-                "maxPar_sim": maxPar_sim,
+                "minPar_sim": minPar,
+                "maxPar_sim": maxPar,
                 "minPar_exp": minPar_exp,
                 "maxPar_exp": maxPar_exp,
                 "sieveCurveDiameter": sieveCurveDiameter,
@@ -693,8 +693,8 @@ from gen_LDPMCSL_multiStep   import gen_LDPMCSL_multiStep
             f.write('parOffset = ' + str(parOffset) + "\n")
             f.write('maxEdgeLength = ' + str(maxEdgeLength) + "\n")
             f.write('max_dist = ' + str(max_dist) + "\n")
-            f.write('minPar_sim = ' + str(minPar_sim) + "\n")
-            f.write('maxPar_sim = ' + str(maxPar_sim) + "\n")
+            f.write('minPar_sim = ' + str(minPar) + "\n")
+            f.write('maxPar_sim = ' + str(maxPar) + "\n")
             f.write('minPar_exp = ' + str(minPar_exp) + "\n")
             f.write('maxPar_exp = ' + str(maxPar_exp) + "\n")
             if fullerCoef == "":
@@ -799,7 +799,7 @@ from gen_LDPMCSL_multiStep   import gen_LDPMCSL_multiStep
 
 def main():
                 
-    generation = gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, maxEdgeLength, max_dist, minPar_sim, maxPar_sim, minPar_exp, maxPar_exp, sieveCurveDiameter, sieveCurvePassing, wcRatio, cementC, airFrac, fullerCoef, flyashC, silicaC, scmC, fillerC, flyashDensity, silicaDensity, scmDensity, fillerDensity, cementDensity, densityWater, multiMatToggle, aggFile, multiMatFile, grainAggMin, grainAggMax, grainAggFuller, grainAggSieveD, grainAggSieveP, grainBinderMin, grainBinderMax, grainBinderFuller, grainBinderSieveD, grainBinderSieveP, grainITZMin, grainITZMax, grainITZFuller, grainITZSieveD, grainITZSieveP, tetVolume, minC, maxC, verbose)
+    generation = gen_LDPMCSL_multiStep(tempPath, numCPU, numIncrements, maxIter, parOffset, maxEdgeLength, max_dist, minPar, maxPar, minPar_exp, maxPar_exp, sieveCurveDiameter, sieveCurvePassing, wcRatio, cementC, airFrac, fullerCoef, flyashC, silicaC, scmC, fillerC, flyashDensity, silicaDensity, scmDensity, fillerDensity, cementDensity, densityWater, multiMatToggle, aggFile, multiMatFile, grainAggMin, grainAggMax, grainAggFuller, grainAggSieveD, grainAggSieveP, grainBinderMin, grainBinderMax, grainBinderFuller, grainBinderSieveD, grainBinderSieveP, grainITZMin, grainITZMax, grainITZFuller, grainITZSieveD, grainITZSieveP, tetVolume, minC, maxC, verbose)
                 
                 
 if __name__ == '__main__':
@@ -964,8 +964,8 @@ if __name__ == '__main__':
 
             self.form[5].statusWindow.setText("Status: Calculating list of particles.") 
             # Calculate list of particle diameters for placement
-            [maxParNum,parDiameterList] = gen_particleList(parVolTotal, minPar_sim, maxPar_sim, minPar_exp, maxPar_exp, newSieveCurveD,\
-                cdf,kappa_i,NewSet,fullerCoef)
+            [maxParNum,parDiameterList] = gen_particleList(parVolTotal, minPar, maxPar, newSieveCurveD,\
+                cdf,kappa_i,NewSet,fullerCoef, minPar_exp, maxPar_exp)
         
             # Initialize empty particle nodes list outside geometry
             internalNodes = (np.zeros((len(parDiameterList),3))+2)*maxC
@@ -1050,7 +1050,7 @@ if __name__ == '__main__':
                 print(materialList)
 
                 # Set minimum particle to be smallest of the three materials 
-                minPar_sim = min(grainAggMin,grainITZMin,grainBinderMin)
+                minPar = min(grainAggMin,grainITZMin,grainBinderMin)
 
 
 
@@ -1100,7 +1100,7 @@ if __name__ == '__main__':
                 print(materialList)
 
                 # Set minimum particle to be smallest of the two materials 
-                minPar_sim = min(grainAggMin,grainBinderMin)
+                minPar = min(grainAggMin,grainBinderMin)
 
 
 
@@ -1123,8 +1123,8 @@ if __name__ == '__main__':
                     process_pool = multiprocessing.Pool(numCPU)
 
                     outputMPI = process_pool.map(functools.partial(gen_particleMPI, surfaceNodes,maxParNum, minC, maxC, meshVertices, \
-                        meshTets, coord1,coord2,coord3,coord4,newMaxIter,maxIter,minPar_sim,\
-                        maxPar_sim,parOffset,verbose,parDiameterList,maxEdgeLength,max_dist,internalNodes), parDiameterList[particlesPlaced:particlesPlaced+math.floor(len(parDiameterList)/numIncrements)])
+                        meshTets, coord1,coord2,coord3,coord4,newMaxIter,maxIter,minPar,\
+                        maxPar,parOffset,verbose,parDiameterList,maxEdgeLength,max_dist,internalNodes), parDiameterList[particlesPlaced:particlesPlaced+math.floor(len(parDiameterList)/numIncrements)])
 
                     nodeMPI = np.array(outputMPI)[:,0:3]
                     diameter = np.array(outputMPI)[:,3]
@@ -1139,25 +1139,25 @@ if __name__ == '__main__':
                         internalNodes[particlesPlaced+x,:] = nodeMPI[x,:]
 
                         # Obtain extents for floating bin for node to test
-                        binMin = np.array(([nodeMPI[x,0]-diameter[x]/2-maxPar_sim/2-parOffset,\
-                            nodeMPI[x,1]-diameter[x]/2-maxPar_sim/2-parOffset,nodeMPI[x,2]-\
-                            diameter[x]/2-maxPar_sim/2-parOffset]))
-                        binMax = np.array(([nodeMPI[x,0]+diameter[x]/2+maxPar_sim/2+parOffset,\
-                            nodeMPI[x,1]+diameter[x]/2+maxPar_sim/2+parOffset,nodeMPI[x,2]+\
-                            diameter[x]/2+maxPar_sim/2+parOffset]))
+                        binMin = np.array(([nodeMPI[x,0]-diameter[x]/2-maxPar/2-parOffset,\
+                            nodeMPI[x,1]-diameter[x]/2-maxPar/2-parOffset,nodeMPI[x,2]-\
+                            diameter[x]/2-maxPar/2-parOffset]))
+                        binMax = np.array(([nodeMPI[x,0]+diameter[x]/2+maxPar/2+parOffset,\
+                            nodeMPI[x,1]+diameter[x]/2+maxPar/2+parOffset,nodeMPI[x,2]+\
+                            diameter[x]/2+maxPar/2+parOffset]))
 
                         # Check if particle overlapping any just added particles (ignore first one placed)
                         if x > 0:
 
                             overlap = check_particleOverlapMPI(nodeMPI[x,:],diameter[x],binMin,\
-                                binMax,minPar_sim,parOffset,nodeMPI[0:x],diameter[0:x])
+                                binMax,minPar,parOffset,nodeMPI[0:x],diameter[0:x])
 
                             if overlap == True:
 
                                 [newMaxIter,node,iterReq] = gen_particle(surfaceNodes,\
                                     parDiameterList[particlesPlaced+x], meshVertices, \
-                                    meshTets,newMaxIter,maxIter,minPar_sim,\
-                                    maxPar_sim,parOffset,parDiameterList,coord1,coord2,coord3,coord4,maxEdgeLength,max_dist,internalNodes)
+                                    meshTets,newMaxIter,maxIter,minPar,\
+                                    maxPar,parOffset,parDiameterList,coord1,coord2,coord3,coord4,maxEdgeLength,max_dist,internalNodes)
                                 
                                 internalNodes[particlesPlaced+x,:] = node[0,:]
 
@@ -1170,7 +1170,7 @@ if __name__ == '__main__':
             for x in range(particlesPlaced,len(parDiameterList)):
 
                 # Generate particle
-                [newMaxIter,node,iterReq] = gen_particle(surfaceNodes,parDiameterList[x],meshVertices,meshTets,newMaxIter,maxIter,minPar_sim,maxPar_sim,\
+                [newMaxIter,node,iterReq] = gen_particle(surfaceNodes,parDiameterList[x],meshVertices,meshTets,newMaxIter,maxIter,minPar,maxPar,\
                     parOffset,parDiameterList,coord1,coord2,coord3,coord4,maxEdgeLength,max_dist,internalNodes)
 
                 # Update progress bar every 1% of placement
@@ -1260,7 +1260,7 @@ if __name__ == '__main__':
 
                 # Generate fiber
                 [p1Fiber, p2Fiber, orienFiber, lFiber] = gen_LDPMCSL_fibers(meshVertices,meshTets,coord1,\
-                    coord2,coord3,coord4,maxIter,fiberLength,maxC,maxPar_sim,\
+                    coord2,coord3,coord4,maxIter,fiberLength,maxC,maxPar,\
                     np.array([fiberOrientation1, fiberOrientation2, fiberOrientation3]),fiberPref,surfaceFaces,\
                     fiberCutting)
                 p1Fibers[x,:] = p1Fiber
@@ -1300,11 +1300,11 @@ if __name__ == '__main__':
     
 
     [tetFacets,facetCenters,facetAreas,facetNormals,tetn1,tetn2,tetPoints,allDiameters,facetPointData,facetCellData] = \
-        gen_LDPMCSL_tesselation(allNodes,allTets,parDiameterList,minPar_sim,geoName)    
+        gen_LDPMCSL_tesselation(allNodes,allTets,parDiameterList,minPar,geoName)    
 
     # If edge elements are turned on, perform edge computations
     if htcToggle in ['on','On']:
-        edgeData = gen_LDPMCSL_flowEdges(htcLength,allNodes,allTets,tetPoints,maxPar_sim,\
+        edgeData = gen_LDPMCSL_flowEdges(htcLength,allNodes,allTets,tetPoints,maxPar,\
             meshVertices,meshTets,coord1,coord2,coord3,coord4,maxC)
 
     else:
@@ -1556,9 +1556,9 @@ if __name__ == '__main__':
 
         if fiberToggle in ['on','On','Y','y','Yes','yes']:
             mkVtk_LDPMCSL_fibers(p1Fibers,p2Fibers,fiberDiameter,fiberLengths,orienFibers,geoName,tempPath)
-            mkVtk_LDPMCSL_projFacets(geoName,projectedFacet,tempPath)
 
         if ((fiberToggle in ['on','On','Y','y','Yes','yes']) and (fiberIntersections in ['on','On','Y','y','Yes','yes'])):
+            mkVtk_LDPMCSL_projFacets(geoName,projectedFacet,tempPath)
             mkVtk_LDPMCSL_nonIntFibers(p1Fibers,p2Fibers,fiberDiameter,fiberLengths,orienFibers,geoName,IntersectedFiber,tempPath)    
 
 
@@ -1829,7 +1829,7 @@ if __name__ == '__main__':
 
     if multiMatToggle == "Off":
         # Display sieve curve data
-        mkDisp_sieveCurves(volFracPar, parVolTotal, tetVolume, minPar_sim, maxPar_sim, minPar_exp, maxPar_exp, fullerCoef,sieveCurveDiameter,sieveCurvePassing,parDiameterList,tempPath)
+        mkDisp_sieveCurves(volFracPar, parVolTotal, tetVolume, minPar, maxPar, fullerCoef,sieveCurveDiameter,sieveCurvePassing,parDiameterList,tempPath, minPar_exp, maxPar_exp)
         # List all files in temp directory
         file_names = os.listdir(tempPath)
         

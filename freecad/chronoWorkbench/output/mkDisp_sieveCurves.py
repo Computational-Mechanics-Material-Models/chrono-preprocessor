@@ -29,8 +29,8 @@ import math
 
 
 
-def mkDisp_sieveCurves(volFracPar,parVolTotal, tetVolume,minPar_sim, maxPar_sim, minPar_exp, maxPar_exp,fullerCoef,
-                       sieveCurveDiameter,sieveCurvePassing,parDiameterList,tempPath):
+def mkDisp_sieveCurves(volFracPar,parVolTotal, tetVolume,minPar_sim, maxPar_sim,fullerCoef,
+                       sieveCurveDiameter,sieveCurvePassing,parDiameterList,tempPath, minPar_exp = None, maxPar_exp = None):
 
     """
     Variable List:
@@ -55,6 +55,11 @@ def mkDisp_sieveCurves(volFracPar,parVolTotal, tetVolume,minPar_sim, maxPar_sim,
 
     # Generate plot of sieve curve
     Plot.figure("Particle Sieve Curve")
+
+    if minPar_exp is None:
+        minPar_exp = minPar_sim
+    if maxPar_exp is None:
+        maxPar_exp = maxPar_sim
 
     # Get volume of small particles and generated particles
     F_a = (maxPar_sim/maxPar_exp)**fullerCoef # Volume fraction of particles smaller than maxPar_sim

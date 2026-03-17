@@ -24,8 +24,8 @@ import math
 import numpy as np
 
 
-def gen_particleList(parVolTotal, minPar_sim, maxPar_sim, minPar_exp, maxPar_exp, newSieveCurveD, cdf, kappa_i, 
-                 NewSet, fullerCoef):
+def gen_particleList(parVolTotal, minPar_sim, maxPar_sim, newSieveCurveD, cdf, kappa_i, 
+                 NewSet, fullerCoef, minPar_exp = None, maxPar_exp = None):
     
     """
     Variable List:
@@ -47,6 +47,10 @@ def gen_particleList(parVolTotal, minPar_sim, maxPar_sim, minPar_exp, maxPar_exp
     parDiameterList: numpy array, particle diameters (sorted large-to-small)
     --------------------------------------------------------------------------
     """
+    if minPar_exp is None:
+        minPar_exp = minPar_sim
+    if maxPar_exp is None:
+        maxPar_exp = maxPar_sim
 
     # Determine 'q' value based on Fuller Coefficient
     q = 3.0-fullerCoef
