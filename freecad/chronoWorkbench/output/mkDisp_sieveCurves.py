@@ -66,7 +66,10 @@ def mkDisp_sieveCurves(volFracPar,parVolTotal, tetVolume,minPar_sim, maxPar_sim,
     F_0_exp = (minPar_exp/maxPar_exp)**fullerCoef # Volume fraction of particles smaller than minPar_exp
     # F_a_exp = (maxPar_exp/maxPar_exp)**fullerCoef # Volume fraction of particles smaller than maxPar_exp
     # volFracSim = (F_a_exp - F_a)/(F_a_exp - F_0_exp)
-    volFracSim = (1 - F_a)/(1 - F_0_exp)
+    if fullerCoef == 0:
+        volFracSim = 0
+    else:
+        volFracSim = (1 - F_a)/(1 - F_0_exp)
 
     totalVol = sum(4/3*math.pi*(parDiameterList/2)**3) # Total volume of generated particles
     volParticles=volFracPar*tetVolume # Total volume of particles in the geometry included small particles

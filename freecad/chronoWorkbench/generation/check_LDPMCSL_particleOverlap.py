@@ -45,7 +45,6 @@ def check_LDPMCSL_particleOverlap(nodes, center, parDiameter, facePoints, binMin
     - A boolean value that is True if the new particle is close to the surface
     --------------------------------------------------------------------------
     """
-
     # Combine the conditions for all particles and store the result in an array
     binTestParticles = np.logical_and.reduce([(nodes[:,0] > binMin[0]),
         (nodes[:,0] < binMax[0]), (nodes[:,1] > binMin[1]),
@@ -56,6 +55,13 @@ def check_LDPMCSL_particleOverlap(nodes, center, parDiameter, facePoints, binMin
     existingNodes = nodes[binTestParticles, :]
     existingParD = parDiameterList[binTestParticles]
 
+    # Check if the new particle overlaps with any existing particles
+    if existingNodes.shape[0] > 0:
+        nodalDistance = np.linalg.norm(center - existingNodes, axis=1)
+        parOffsetDist = nodalDistance - parDiameter/2 - existingParD/2 - parOffset
+        if (parOffsetDist < 0).any():
+            return True, False
+
     # Combine the conditions for all surface points and store the result in an array
     binTestSurf = np.all([(facePoints[:,0] > binMin[0]),
         (facePoints[:,0] < binMax[0]), (facePoints[:,1] > binMin[1]),
@@ -64,15 +70,6 @@ def check_LDPMCSL_particleOverlap(nodes, center, parDiameter, facePoints, binMin
 
     # Store edge nodes that fall inside the bin
     existingSurf = facePoints[binTestSurf, :]
- 
-    # Check if the new particle overlaps with any existing particles
-    if existingNodes.shape[0] > 0:
-        nodalDistance = np.linalg.norm(center - existingNodes, axis=1)
-        parOffsetDist = nodalDistance - parDiameter/2 - existingParD/2 - parOffset
-        if (parOffsetDist < 0).any():
-            return True, "NA"
-    else:
-        parOffsetDist = np.array([1])
 
     # Check if the new particle is too close to the surface
     if existingSurf.shape[0] > 0:
@@ -80,10 +77,51 @@ def check_LDPMCSL_particleOverlap(nodes, center, parDiameter, facePoints, binMin
         #if (surfNodalDistance**2 <= (maxEdgeLength * np.sqrt(3) / 3)**2 + (parDiameter / 2)**2).any():
         #    return False, True
         if (surfNodalDistance - parDiameter/2 - 1.1 * minPar / 2 < 0).any():
-            return True, "NA"
-    else:
-        parSurfaceDist = np.array([1])
+            return False, True
+
 
 
     # Temporary fix to always check surface particles. This will be removed in the future and switched to False, False when the critical check is fixed. 
     return False, True
+
+    # # Combine the conditions for all particles and store the result in an array
+    # binTestParticles = np.logical_and.reduce([(nodes[:,0] > binMin[0]),
+    #     (nodes[:,0] < binMax[0]), (nodes[:,1] > binMin[1]),
+    #     (nodes[:,1] < binMax[1]), (nodes[:,2] > binMin[2]),
+    #     (nodes[:,2] < binMax[2])])
+
+    # # Store particle nodes that fall inside the bin
+    # existingNodes = nodes[binTestParticles, :]
+    # existingParD = parDiameterList[binTestParticles]
+
+    # # Combine the conditions for all surface points and store the result in an array
+    # binTestSurf = np.all([(facePoints[:,0] > binMin[0]),
+    #     (facePoints[:,0] < binMax[0]), (facePoints[:,1] > binMin[1]),
+    #     (facePoints[:,1] < binMax[1]), (facePoints[:,2] > binMin[2]),
+    #     (facePoints[:,2] < binMax[2])], axis=0)
+
+    # # Store edge nodes that fall inside the bin
+    # existingSurf = facePoints[binTestSurf, :]
+ 
+    # # Check if the new particle overlaps with any existing particles
+    # if existingNodes.shape[0] > 0:
+    #     nodalDistance = np.linalg.norm(center - existingNodes, axis=1)
+    #     parOffsetDist = nodalDistance - parDiameter/2 - existingParD/2 - parOffset
+    #     if (parOffsetDist < 0).any():
+    #         return True, "NA"
+    # else:
+    #     parOffsetDist = np.array([1])
+
+    # # Check if the new particle is too close to the surface
+    # if existingSurf.shape[0] > 0:
+    #     surfNodalDistance = np.linalg.norm(center - existingSurf, axis=1)
+    #     #if (surfNodalDistance**2 <= (maxEdgeLength * np.sqrt(3) / 3)**2 + (parDiameter / 2)**2).any():
+    #     #    return False, True
+    #     if (surfNodalDistance - parDiameter/2 - 1.1 * minPar / 2 < 0).any():
+    #         return True, "NA"
+    # else:
+    #     parSurfaceDist = np.array([1])
+
+
+    # # Temporary fix to always check surface particles. This will be removed in the future and switched to False, False when the critical check is fixed. 
+    # return False, True

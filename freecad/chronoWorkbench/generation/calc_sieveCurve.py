@@ -91,7 +91,9 @@ def calc_sieveCurve(minPar, maxPar, sieveCurveDiameter, sieveCurvePassing):
     # Trim excess zeros from new sieve curve arrays
     newSieveCurveD = np.trim_zeros(newSieveCurveD, trim='b')
     newSieveCurveP = np.trim_zeros(newSieveCurveP, trim='b')
-    
+    print("New Sieve Curve Diameters: ", newSieveCurveD)
+    print("New Sieve Curve Percent Passing: ", newSieveCurveP)
+    print("Minimum Weight: ", w_min, " Maximum Weight: ", w_max)
     # Return new sieve curve data and related values
     return newSieveCurveD, newSieveCurveP, NewSet, w_min, w_max
 

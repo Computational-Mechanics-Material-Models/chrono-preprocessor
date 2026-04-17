@@ -54,6 +54,7 @@ def calc_parVolume(tetVolume, wcRatio, cementC, volFracAir, fullerCoef, flyashC,
     w_max:          maximum value for a weight distribution
     --------------------------------------------------------------------------
     ### Outputs ###
+    volFracPar:     volume fraction of particles in the mix
     parVolSimTotal: total volume of particles in the mix
     cdf:            cumulative distribution function
     cdf1:           cumulative distribution function

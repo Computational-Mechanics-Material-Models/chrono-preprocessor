@@ -24,7 +24,7 @@ import numpy as np
 
 from freecad.chronoWorkbench.generation.check_LDPMCSL_particleOverlap    import check_LDPMCSL_particleOverlap
 from freecad.chronoWorkbench.generation.check_LDPMCSL_particleInside     import check_LDPMCSL_particleInside
-
+from freecad.chronoWorkbench.generation.check_LDPMCSL_particleInside_Samplenodes import check_LDPMCSL_particleInside_Samplenodes
 
 def gen_particle(facePoints,parDiameter,\
     vertices,tets,newMaxIter,maxIter,minPar,maxPar,\
@@ -58,9 +58,11 @@ def gen_particle(facePoints,parDiameter,\
     - iterReq:          Number of iterations required to place a particle
     --------------------------------------------------------------------------
     """  
-
     # Generate random numbers to use in generation
-    randomN = np.random.rand(newMaxIter*3)    
+    randomN = np.random.rand(newMaxIter*3)
+
+    tets_min_global = np.min(vertices[tets - 1], axis=(0, 1))
+    tets_max_global = np.max(vertices[tets - 1], axis=(0, 1))    
 
     # Generate random nodal location
     iterReq = 0
@@ -68,24 +70,44 @@ def gen_particle(facePoints,parDiameter,\
         iterReq = iterReq + 3
 
         if iterReq/3 >= newMaxIter:
+            if newMaxIter >= maxIter:
+                print("This particle has exceeeded the %r specified maximum iterations allowed." % (maxIter))
+                print('Now exitting...')
+                exit()
             iterReq = 0
-            newMaxIter = newMaxIter * 2
-            randomN = np.random.rand(newMaxIter*3)
+            newMaxIter = min(newMaxIter * 2, maxIter)
+            randomN = np.random.rand(newMaxIter * 3)
+        # if iterReq/3 >= newMaxIter:
+        #     iterReq = 0
+        #     newMaxIter = newMaxIter * 2
+        #     randomN = np.random.rand(newMaxIter*3)
 
-        if newMaxIter >= maxIter:
-            print("This particle has exceeeded the %r specified maximum iterations allowed." % (maxIter))
-            print('Now exitting...')
-            exit()
+        # if newMaxIter >= maxIter:
+        #     print("This particle has exceeeded the %r specified maximum iterations allowed." % (maxIter))
+        #     print('Now exitting...')
+        #     exit()
 
         # Random point selection in random tet prism container    
-        tetIndex = int(np.around(randomN[iterReq] * len(tets))) - 1
+        tetIndex = np.random.randint(len(tets))
         tetVerts = vertices[tets[tetIndex]-1]
 
-        tetMin = np.amin(tetVerts, axis=0)
-        tetMax = np.amax(tetVerts, axis=0)
+        # random barycentric coordinates
+        weight = np.sort(np.random.rand(3))
+        x1 = weight[0]
+        x2 = weight[1] - weight[0]
+        x3 = weight[2] - weight[1]
+        x4 = 1.0 - weight[2]
 
-        node = randomN[iterReq:iterReq+3] * (tetMax - tetMin) + tetMin
+        node = x1 * tetVerts[0] + x2 * tetVerts[1] + x3 * tetVerts[2] + x4 * tetVerts[3]
+        node = node[np.newaxis, :]
+
+        # Generate a random point inside the tetrahedron
+        node = x1 * tetVerts[0] + x2 * tetVerts[1] + x3 * tetVerts[2] + x4 * tetVerts[3]
         node = node[np.newaxis,:]
+
+        if np.any(node < tets_min_global) or np.any(node > tets_max_global):
+            print("node outside the box", node)
+            print("tetVerts", tetVerts)
 
         # Obtain extents for floating bin
         binMin = node[0,:] - parDiameter/2 - maxPar/2 - parOffset
@@ -101,13 +123,72 @@ def gen_particle(facePoints,parDiameter,\
             # If critically close to the surface set overlap[1] = True
             if overlap[1] == True:
 
-                # Check if particle is inside the mesh if critically close          
+                # Check if particle is inside the mesh if critically close   
                 inside = check_LDPMCSL_particleInside(vertices,tets,node,parDiameter,binMin,binMax,coord1,\
-                                    coord2,coord3,coord4)
+                                    coord2,coord3,coord4)       
+                # inside = check_LDPMCSL_particleInside_Samplenodes(vertices,tets,node,parDiameter,binMin,binMax,coord1,\
+                #                     coord2,coord3,coord4)
 
             else:
                 inside = True
 
             # Indicate placed particle and break While Loop
             if inside == True and overlap[0] == False:
+                # print("Placed particle at: ", node)
+                print("Particle diameter: ", parDiameter)
+                # print("Iterations required to place particle: ", iterReq/3)
                 return newMaxIter,node,iterReq
+
+
+    # # Generate random numbers to use in generation
+    # randomN = np.random.rand(newMaxIter*3)    
+
+    # # Generate random nodal location
+    # iterReq = 0
+    # while True:
+    #     iterReq = iterReq + 3
+
+    #     if iterReq/3 >= newMaxIter:
+    #         iterReq = 0
+    #         newMaxIter = newMaxIter * 2
+    #         randomN = np.random.rand(newMaxIter*3)
+
+    #     if newMaxIter >= maxIter:
+    #         print("This particle has exceeeded the %r specified maximum iterations allowed." % (maxIter))
+    #         print('Now exitting...')
+    #         exit()
+
+    #     # Random point selection in random tet prism container    
+    #     tetIndex = int(np.around(randomN[iterReq] * len(tets))) - 1
+    #     tetVerts = vertices[tets[tetIndex]-1]
+
+    #     tetMin = np.amin(tetVerts, axis=0)
+    #     tetMax = np.amax(tetVerts, axis=0)
+
+    #     node = randomN[iterReq:iterReq+3] * (tetMax - tetMin) + tetMin
+    #     node = node[np.newaxis,:]
+
+    #     # Obtain extents for floating bin
+    #     binMin = node[0,:] - parDiameter/2 - maxPar/2 - parOffset
+    #     binMax = node[0,:] + parDiameter/2 + maxPar/2 + parOffset
+
+    #     # Check if particle overlapping any existing particles or bad nodes
+    #     overlap = check_LDPMCSL_particleOverlap(nodes,node,parDiameter,facePoints,binMin,\
+    #         binMax,minPar,maxEdgeLength,parOffset,parDiameterList)
+
+    #     # If does not overlap an existing particle set overlap[0] = False
+    #     if overlap[0] == False:
+            
+    #         # If critically close to the surface set overlap[1] = True
+    #         if overlap[1] == True:
+
+    #             # Check if particle is inside the mesh if critically close          
+    #             inside = check_LDPMCSL_particleInside(vertices,tets,node,parDiameter,binMin,binMax,coord1,\
+    #                                 coord2,coord3,coord4)
+
+    #         else:
+    #             inside = True
+
+    #         # Indicate placed particle and break While Loop
+    #         if inside == True and overlap[0] == False:
+    #             return newMaxIter,node,iterReq

@@ -60,8 +60,10 @@ def gen_particleList(parVolTotal, minPar_sim, maxPar_sim, newSieveCurveD, cdf, k
     F_0_exp = (minPar_exp/maxPar_exp)**fullerCoef # Volume fraction of particles smaller than minPar_exp
     F_a_exp = (maxPar_exp/maxPar_exp)**fullerCoef # Volume fraction of particles smaller than maxPar_exp
     
-    # print("F_0: ", F_0, " F_a: ", F_a, " F_0_exp: ", F_0_exp, " F_a_exp: ", F_a_exp)
-    volFracSim = (F_a - F_0)/(F_a_exp - F_0_exp)
+    if fullerCoef == 0:
+        volFracSim = 1
+    else:
+        volFracSim = (F_a - F_0)/(F_a_exp - F_0_exp)
     # print("Volume Fraction within Simulation Limits: ", volFracSim)
     parVolTotal = parVolTotal*volFracSim # Adjust total particle volume based on simulation size limits    
     
@@ -154,5 +156,8 @@ def gen_particleList(parVolTotal, minPar_sim, maxPar_sim, newSieveCurveD, cdf, k
 
     # Sort particle diameters large-to-small
     parDiameterList = np.sort(parDiameter)[::-1]
+    # print("Generated Particle Diameters: ", parDiameterList)
+    # print("Total particle volume: ", parVolTotal)
+    # print("Total Volume of Generated Particles: ", sum(parVol))
     # return maxparNum, parDiameterList, parDiameterList_exp
     return maxparNum, parDiameterList
