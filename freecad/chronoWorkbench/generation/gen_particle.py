@@ -135,7 +135,7 @@ def gen_particle(facePoints,parDiameter,\
             # Indicate placed particle and break While Loop
             if inside == True and overlap[0] == False:
                 # print("Placed particle at: ", node)
-                print("Particle diameter: ", parDiameter)
+                # print("Particle diameter: ", parDiameter)
                 # print("Iterations required to place particle: ", iterReq/3)
                 return newMaxIter,node,iterReq
 
